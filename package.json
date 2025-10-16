@@ -1,0 +1,29 @@
+{
+  "name": "BookShopPostgre",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "dependencies": {
+    "@sap/cds": "^9",
+    "@sap/xssec": "^3",
+    "express": "^4",
+    "pg": "^8"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^8",
+    "@sap/ux-specification": "^1.120.1"
+  },
+  "scripts": {
+    "start": "cds-serve"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sql"
+      }
+    },
+    "service": {
+      "impl": "./srv/equipment-service.js"
+    }
+  }
+}
