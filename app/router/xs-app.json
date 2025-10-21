@@ -1,16 +1,11 @@
 {
-  "welcomeFile": "/equipmentappfiori-0.0.1/",
   "authenticationMethod": "none",
   "routes": [
     {
-      "source": "^/equipmentappfiori-0.0.1/(.*)$",
-      "target": "/equipmentappfiori-0.0.1/$1",
-      "service": "html5-apps-repo-rt"
-    },
-    {
-      "source": "^(.*)$",
-      "target": "/equipmentappfiori-0.0.1/$1",
-      "service": "html5-apps-repo-rt"
+      "source": "^/odata/v4/(.*)$",
+      "target": "$1",
+      "destination": "srv-api",
+      "authenticationType": "none"
     }
   ]
 }

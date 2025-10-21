@@ -1,149 +1,74 @@
 _schema-version: 3.3.0
 ID: equipment-maintenance
-description: A simple CAP project.
 version: 1.0.0
-
-modules:
-  # App Router Module
-  - name: equipment-maintenance-router
-    type: approuter.nodejs
-    path: app/router
-    requires:
-      - name: equipment-maintenance-auth
-      - name: equipment-maintenance-repo-host
-        parameters:
-          service-key:
-            name: equipment-maintenance-app-content-equipment-1
-      - name: equipment-maintenance-destination-service
-    parameters:
-      disk-quota: 256M
-      memory: 256M
-      buildpack: nodejs_buildpack
-
-  # CAP Service Module
-  - name: equipment-maintenance-srv
-    type: nodejs
-    path: gen/srv
-    requires:
-      - name: equipment-maintenance-auth
-      - name: equipment-maintenance-postgres
-    provides:
-      - name: srv-api
-        properties:
-          srv-url: ${default-url}
-    parameters:
-      buildpack: nodejs_buildpack
-      instances: 1
-    build-parameters:
-      builder: npm-ci
-
-  # PostgreSQL Deployer Module
-  - name: equipment-maintenance-postgres-deployer
-    type: nodejs
-    path: gen/pg
-    requires:
-      - name: equipment-maintenance-postgres
-    parameters:
-      buildpack: nodejs_buildpack
-      no-route: true
-      no-start: true
-      tasks:
-        - command: npm start
-          name: deploy-to-postgresql
-
-  # HTML5 App Content Module
-  - name: equipment-maintenance-app-content
-    type: com.sap.application.content
-    path: .
-    requires:
-      - name: equipment-maintenance-repo-host
-        parameters:
-          content-target: true
-    build-parameters:
-      build-result: resources
-      requires:
-        - artifacts:
-            - equipmentappfiori.zip
-          name: equipmentappfiori
-          target-path: resources/
-
-  # Fiori UI Module
-  - name: equipmentappfiori
-    type: html5
-    path: app/fiori
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm install
-        - npx ui5 build --clean-dest --dest dist
-      supported-platforms: []
-
-resources:
-  # Authentication Service
-  - name: equipment-maintenance-auth
-    type: org.cloudfoundry.managed-service
-    parameters:
-      config:
-        role-collections:
-          - description: generated
-            name: admin (equipment-maintenance ${org}-${space})
-            role-template-references:
-              - $XSAPPNAME.admin
-        tenant-mode: dedicated
-        xsappname: equipment-maintenance-${org}-${space}
-      path: ./xs-security.json
-      service: xsuaa
-      service-plan: application
-
-  # PostgreSQL Database
-  - name: equipment-maintenance-postgres
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: postgresql-db
-      service-name: Postgres-DB
-      service-plan: trial
-
-  # HTML5 Repository
-  - name: equipment-maintenance-repo-host
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: html5-apps-repo
-      service-name: equipment-maintenance-html5-service
-      service-plan: app-host
-
-  # Destination Service
-  - name: equipment-maintenance-destination-service
-    type: org.cloudfoundry.managed-service
-    parameters:
-      config:
-        HTML5Runtime_enabled: true
-        init_data:
-          instance:
-            destinations:
-              - Authentication: NoAuthentication
-                Name: ui5
-                ProxyType: Internet
-                Type: HTTP
-                URL: https://ui5.sap.com
-              - Authentication: NoAuthentication
-                Name: html5-apps-repo-rt
-                ProxyType: Internet
-                Type: HTTP
-                URL: https://html5-apps-repo-rt.cfapps.us10-001.hana.ondemand.com
-            existing_destinations_policy: update
-        version: 1.0.0
-      service: destination
-      service-name: equipment-maintenance-destination-service
-      service-plan: lite
-
+description: "A simple CAP project."
 parameters:
-  deploy_mode: html5-repo
   enable-parallel-deployments: true
-
 build-parameters:
   before-all:
     - builder: custom
       commands:
-        - npm ci
+        - npm install
         - npx cds build --production
+      timeout: 15m
+
+modules:
+  - name: equipment-maintenance-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      command: NODE_ENV=production npx cds-serve
+      host: ${org}-${space}-${app-name}
+      disk-quota: 1024M
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: db
+      - name: db-deployed 
+
+  - name: equipment-maintenance-db-deployer
+    type: nodejs
+    path: gen/srv 
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      no-route: true
+      no-start: true 
+      host: ${org}-${space}-${app-name}-deployer
+      disk-quota: 1024M
+      tasks: 
+        - name: deploy-to-postgres
+          command: npm run deploy 
+    build-parameters:
+      builder: npm-ci 
+    provides:
+      - name: db-deployed
+    requires:
+      - name: db
+
+  - name: equipment-maintenance
+    type: approuter.nodejs
+    path: app/router 
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 512M
+      memory: 512M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+
+resources:
+  - name: db
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: Postgres-DB
