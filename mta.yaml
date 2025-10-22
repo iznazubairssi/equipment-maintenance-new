@@ -1,9 +1,6 @@
-_schema-version: 3.3.0
+_schema-version: "3.3.0"
 ID: equipment-maintenance
-version: 1.0.0
-description: "A simple CAP project."
-parameters:
-  enable-parallel-deployments: true
+version: "1.0.0"
 
 build-parameters:
   before-all:
@@ -14,68 +11,31 @@ build-parameters:
       timeout: 15m
 
 modules:
-  # 1. SRV (Service) Module
   - name: equipment-maintenance-srv
     type: nodejs
-    path: gen/srv 
+    path: gen/srv
     parameters:
       buildpack: nodejs_buildpack
       memory: 512M
       command: npm start
-      host: ${org}-${space}-${app-name}
-      disk-quota: 1024M
-      env:
-        NODE_ENV: production
-        CDS_ENV: production 
-    build-parameters:
-      builder: npm # <-- FIX: Changed from npm-ci
     provides:
       - name: srv-api
         properties:
-          srv-url: ${default-url}
+          url: '${default-url}'
     requires:
-      - name: db
-      - name: db-deployed 
+      - name: db  # ← THIS IS CRITICAL
 
-  # 2. DB (Database) Deployer Module
-  - name: equipment-maintenance-db-deployer
-    type: nodejs
-    path: gen/pg
-    parameters:
-      buildpack: nodejs_buildpack
-      memory: 512M
-      no-route: true
-      no-start: true 
-      host: ${org}-${space}-${app-name}-deployer
-      disk-quota: 1024M
-      env:
-        NODE_ENV: production
-        CDS_ENV: production
-      tasks: 
-        - command: npm start
-          name: deploy-to-postgresql
-    build-parameters: 
-      builder: npm # <-- FIX: Changed from npm-ci
-    provides:
-      - name: db-deployed
-    requires:
-      - name: db
-
-  # 3. AppRouter Module
-  - name: equipment-maintenance
+  - name: equipment-maintenance-approuter
     type: approuter.nodejs
-    path: app/router 
+    path: app/router
     parameters:
-      keep-existing-routes: true
-      disk-quota: 512M
-      memory: 512M
+      memory: 256M
     requires:
       - name: srv-api
         group: destinations
         properties:
           name: srv-api
-          url: ~{srv-url}
-          forwardAuthToken: true
+          url: '~{url}'
 
 resources:
   - name: db

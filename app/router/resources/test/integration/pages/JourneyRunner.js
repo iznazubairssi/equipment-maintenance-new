@@ -1,0 +1,2 @@
+sap.ui.define(["sap/fe/test/JourneyRunner","equipment/app/fiori/test/integration/pages/EquipmentsList","equipment/app/fiori/test/integration/pages/EquipmentsObjectPage"],function(e,t,i){"use strict";var n=new e({launchUrl:sap.ui.require.toUrl("equipment/app/fiori")+"/test/flp.html#app-preview",pages:{onTheEquipmentsList:t,onTheEquipmentsObjectPage:i},async:true});return n});
+//# sourceMappingURL=JourneyRunner.js.map
