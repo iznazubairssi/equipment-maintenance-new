@@ -4,6 +4,7 @@ version: 1.0.0
 description: "A simple CAP project."
 parameters:
   enable-parallel-deployments: true
+
 build-parameters:
   before-all:
     - builder: custom
@@ -13,17 +14,21 @@ build-parameters:
       timeout: 15m
 
 modules:
+  # 1. SRV (Service) Module
   - name: equipment-maintenance-srv
     type: nodejs
-    path: gen/srv
+    path: gen/srv 
     parameters:
       buildpack: nodejs_buildpack
       memory: 512M
-      command: NODE_ENV=production npx cds-serve
+      command: npm start
       host: ${org}-${space}-${app-name}
       disk-quota: 1024M
+      env:
+        NODE_ENV: production
+        CDS_ENV: production 
     build-parameters:
-      builder: npm-ci
+      builder: npm # <-- FIX: Changed from npm-ci
     provides:
       - name: srv-api
         properties:
@@ -32,9 +37,10 @@ modules:
       - name: db
       - name: db-deployed 
 
+  # 2. DB (Database) Deployer Module
   - name: equipment-maintenance-db-deployer
     type: nodejs
-    path: gen/srv 
+    path: gen/pg
     parameters:
       buildpack: nodejs_buildpack
       memory: 512M
@@ -42,16 +48,20 @@ modules:
       no-start: true 
       host: ${org}-${space}-${app-name}-deployer
       disk-quota: 1024M
+      env:
+        NODE_ENV: production
+        CDS_ENV: production
       tasks: 
-        - name: deploy-to-postgres
-          command: npm run deploy 
-    build-parameters:
-      builder: npm-ci 
+        - command: npm start
+          name: deploy-to-postgresql
+    build-parameters: 
+      builder: npm # <-- FIX: Changed from npm-ci
     provides:
       - name: db-deployed
     requires:
       - name: db
 
+  # 3. AppRouter Module
   - name: equipment-maintenance
     type: approuter.nodejs
     path: app/router 

@@ -3,29 +3,31 @@
   "version": "1.0.0",
   "description": "A simple CAP project.",
   "dependencies": {
+    "@cap-js/postgres": "^2.0.5",
     "@sap/cds": "^9",
     "@sap/xssec": "^3",
     "express": "^4",
     "pg": "^8.11.3"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^2.0.3",
     "@sap/cds-dk": "^9.4.1",
     "@sap/ux-specification": "^1.120.1"
   },
   "scripts": {
-    "start": "NODE_ENV=production cds-serve",
-    "deploy": "npx cds deploy --to postgres --no-build"
+    "start": "cds-serve",
+    "deploy": "cds deploy --to postgres --no-build"
   },
   "cds": {
     "requires": {
       "db": {
-        "kind": "sqlite",
-        "credentials": { "url": "db.sqlite" },
-        "[production]": {
-           "kind": "postgres",
-           "impl": "pg"
+        "kind": "postgres",
+        "impl": "@cap-js/postgres",
+        "vcap": {
+          "name": "Postgres-DB"
         }
+      },
+      "auth": {
+        "kind": "dummy"
       }
     }
   }
