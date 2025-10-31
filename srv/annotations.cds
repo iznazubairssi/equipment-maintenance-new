@@ -14,7 +14,6 @@ annotate EquipmentService.Equipments with @(
     }
 );
 
-// Annotations for the Main Equipments Entity
 annotate EquipmentService.Equipments with @(
     UI: {
         // List Report Columns
@@ -146,7 +145,6 @@ annotate EquipmentService.Equipments with {
     EQNAME @Common.FieldControl: #Mandatory;
 }
 
-// Annotations for the EquipmentTypes Entity
 annotate EquipmentService.EquipmentTypes with @(
     UI: {
         LineItem: [
@@ -154,6 +152,109 @@ annotate EquipmentService.EquipmentTypes with @(
             { Value: EQTYPE_DESC, Label: 'Description' },
             { Value: EQTYPE_STATUS_CAPABLE, Label: 'Status Capable' }
         ],
-        SelectionFields: [EQTYPE, EQTYPE_DESC]
-    }
+        SelectionFields: [EQTYPE, EQTYPE_DESC],
+        HeaderInfo: {
+            TypeName: 'Equipment Type',
+            TypeNamePlural: 'Equipment Types'
+        }
+    },
+    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
+);
+
+annotate EquipmentService.StatusTypes with @(
+    UI: {
+        LineItem: [
+            { Value: STATUSTYPE, Label: 'Status Type' },
+            { Value: STATUSTYPEDESC, Label: 'Description' },
+            { Value: COLORHEX, Label: 'Color Code' }
+        ],
+        SelectionFields: [STATUSTYPE, STATUSTYPEDESC],
+        HeaderInfo: {
+            TypeName: 'Status Type',
+            TypeNamePlural: 'Status Types',
+            Title: { Value: STATUSTYPEDESC },
+            Description: { Value: STATUSTYPE }
+        },
+        Identification: [
+            { Value: STATUSTYPE },
+            { Value: STATUSTYPEDESC }
+        ]
+    },
+    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
+);
+
+annotate EquipmentService.Status with @(
+    UI: {
+        LineItem: [
+            { Value: STATUS, Label: 'Status Code' },
+            { Value: STATUSDESC, Label: 'Description' },
+            { Value: STATUSTYPE.STATUSTYPE, Label: 'Status Type' }
+        ],
+        SelectionFields: [STATUS, STATUSDESC, STATUSTYPE.STATUSTYPE],
+        HeaderInfo: {
+            TypeName: 'Status',
+            TypeNamePlural: 'Statuses',
+            Title: { Value: STATUSDESC },
+            Description: { Value: STATUS }
+        },
+        Identification: [
+            { Value: STATUS },
+            { Value: STATUSDESC }
+        ]
+    },
+    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
+);
+
+annotate EquipmentService.EquipmentHierarchies with @(
+    UI: {
+        LineItem: [
+            { Value: EQUIPMENT.EQNAME, Label: 'Parent Group' },
+            { Value: EQUIPMENT_SUB.EQNAME, Label: 'Child Equipment' },
+            { Value: OrderNo, Label: 'Sort Order' }
+        ],
+        SelectionFields: [EQUIPMENT.EQUIPMENT, EQUIPMENT_SUB.EQUIPMENT],
+        HeaderInfo: {
+            TypeName: 'Hierarchy',
+            TypeNamePlural: 'Hierarchies',
+            Title: { Value: EQUIPMENT.EQNAME },
+            Description: { Value: EQUIPMENT_SUB.EQNAME }
+        }
+    },
+    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
+);
+
+annotate EquipmentService.EquipmentStatus with @(
+    UI: {
+        LineItem: [
+            { Value: EQUIPMENT.EQNAME, Label: 'Equipment' },
+            { Value: LASTSTATUS.STATUS, Label: 'Last Status' },
+            { Value: LASTSTATUSCHANGE, Label: 'Last Change' }
+        ],
+        SelectionFields: [EQUIPMENT.EQUIPMENT, LASTSTATUS.STATUS],
+        HeaderInfo: {
+            TypeName: 'Current Status',
+            TypeNamePlural: 'Current Statuses',
+            Title: { Value: EQUIPMENT.EQNAME }
+        }
+    },
+    Capabilities: { Insertable: true, UpFdatable: true, Deletable: true }
+);
+
+annotate EquipmentService.StatusHistory with @(
+    UI: {
+        LineItem: [
+            { Value: EQUIPMENT.EQNAME, Label: 'Equipment' },
+            { Value: TIME, Label: 'Timestamp' },
+            { Value: STATUS.STATUS, Label: 'Status' },
+            { Value: LENGTHMSEC, Label: 'Duration (ms)' },
+            { Value: SOURCE, Label: 'Source' }
+        ],
+        SelectionFields: [EQUIPMENT.EQUIPMENT, STATUS.STATUS, SOURCE],
+        HeaderInfo: {
+            TypeName: 'Status History',
+            TypeNamePlural: 'Status Histories',
+            Title: { Value: EQUIPMENT.EQNAME }
+        }
+    },
+    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
 );

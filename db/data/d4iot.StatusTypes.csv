@@ -1,0 +1,9 @@
+STATUSTYPE,STATUSTYPEDESC,COLORHEX
+PROD,P: Productive,#008000
+PROD2,P2: Productive, reduced performance,#90EE90
+ENG,E:Enginnering/Test,#0000FF
+IDLE,I: Idle,#FFFF00
+DOWN,R: Repair/Problem,#FF0000
+MAINT,M: Planned maintenance,#8B0000
+SETUP,S: Setup,#ADD8E6
+OUT,O: Shutdown,

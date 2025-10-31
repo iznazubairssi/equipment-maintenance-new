@@ -1,0 +1,7 @@
+STATUS,STATUSDESC,STATUSTYPE_STATUSTYPE
+P1,Productive,PROD
+P2,Reduced Performance,PROD2
+R1,Down,DOWN
+M1,Maintenance,MAINT
+I1,Idle no operator,IDLE
+I2,Idle no material,IDLE

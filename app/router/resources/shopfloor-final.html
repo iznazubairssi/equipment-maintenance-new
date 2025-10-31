@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Shopfloor View</title>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://sapui5.hana.ondemand.com/1.141.1/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-compat-version="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frame-options="trusted"
+        data-sap-ui-libs="sap.m,sap.ui.core,sap.ui.layout"
+    ></script>
+</head>
+<body class="sapUiBody sapUiSizeCompact">
+    <div id="content"></div>
+    
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            createShopfloor();
+        });
+        
+        function createShopfloor() {
+            console.log("🏭 Creating Shopfloor View...");
+            
+            // ===== HEADER CONTROLS =====
+            var oRefreshSegmented = new sap.m.SegmentedButton({
+                selectedKey: "auto",
+                items: [
+                    new sap.m.SegmentedButtonItem({text: "Auto Refresh", key: "auto"}),
+                    new sap.m.SegmentedButtonItem({text: "Manual Refresh", key: "manual"})
+                ]
+            });
+            
+            var oGroupFilter = new sap.m.Select({
+                width: "200px",
+                items: [
+                    new sap.ui.core.Item({key: "all", text: "All Equipment"}),
+                    new sap.ui.core.Item({key: "production", text: "Production Line"}),
+                    new sap.ui.core.Item({key: "assembly", text: "Assembly Area"})
+                ]
+            });
+            
+            var oDocButton = new sap.m.Button({
+                icon: "sap-icon://document",
+                tooltip: "Program Documentation",
+                press: function() {
+                    sap.m.MessageBox.information("Program documentation would open here");
+                }
+            });
+            
+            // ===== GROUP TABS =====
+            var oGroupTabs = new sap.m.IconTabBar({
+                class: "sapUiResponsiveContentPadding",
+                items: [
+                    new sap.m.IconTabFilter({text: "All Equipment", key: "all", showAll: true}),
+                    new sap.m.IconTabFilter({text: "Production Line", key: "production", count: "3"}),
+                    new sap.m.IconTabFilter({text: "Assembly Area", key: "assembly", count: "0"})
+                ],
+                select: function(oEvent) {
+                    var sKey = oEvent.getParameter("selectedKey");
+                    sap.m.MessageToast.show("Showing: " + sKey);
+                }
+            });
+            
+            // ===== EQUIPMENT CARDS =====
+            var aCards = [];
+            
+            // Card 1: Hydraulic Press
+            aCards.push(createEquipmentCard(
+                "PRESS-001",
+                "Hydraulic Press", 
+                "#4CAF50", // Green
+                "P1 - Productive",
+                "2024-10-31 08:30:45",
+                "Production Line"
+            ));
+            
+            // Card 2: CNC Milling Machine  
+            aCards.push(createEquipmentCard(
+                "MILL-002",
+                "CNC Milling Machine",
+                "#8BC34A", // Light Green
+                "P2 - Reduced Performance",
+                "2024-10-31 09:15:20", 
+                "Production Line"
+            ));
+            
+            // Card 3: Automatic Lathe
+            aCards.push(createEquipmentCard(
+                "LATHE-003",
+                "Automatic Lathe",
+                "#F44336", // Red
+                "R1 - Down",
+                "2024-10-31 07:45:10",
+                "Production Line"
+            ));
+            
+            // Create a simple container for cards
+            var oCardsContainer = new sap.m.FlexBox({
+                width: "100%",
+                height: "100%",
+                wrap: "Wrap",
+                alignItems: "Start",
+                items: aCards
+            });
+            
+            // ===== MAIN PAGE STRUCTURE =====
+            var oPage = new sap.m.Page({
+                title: "Shopfloor View",
+                showNavButton: true,
+                navButtonPress: function() {
+                    window.history.back();
+                },
+                headerContent: [oRefreshSegmented, oGroupFilter, oDocButton],
+                content: [
+                    oGroupTabs,
+                    new sap.m.ScrollContainer({
+                        vertical: true,
+                        height: "100%",
+                        content: [oCardsContainer]
+                    })
+                ]
+            });
+            
+            // Render the page
+            oPage.placeAt("content");
+            
+            console.log("✅ Shopfloor created successfully with " + aCards.length + " equipment cards");
+            sap.m.MessageToast.show("Shopfloor loaded with 3 equipment cards");
+        }
+        
+        function createEquipmentCard(sId, sDesc, sColor, sStatus, sLastUpdate, sGroup) {
+            return new sap.m.Panel({
+                headerText: sId,
+                width: "320px",
+                class: "sapUiSmallMargin",
+                content: [
+                    new sap.m.VBox({
+                        items: [
+                            // Description
+                            new sap.m.Text({
+                                text: sDesc,
+                                class: "sapUiSmallMarginBottom"
+                            }),
+                            
+                            // Status with color dot
+                            new sap.m.HBox({
+                                alignItems: "Center",
+                                items: [
+                                    new sap.ui.core.HTML({
+                                        content: '<div style="width: 12px; height: 12px; background: ' + sColor + '; border-radius: 50%; margin-right: 8px;"></div>'
+                                    }),
+                                    new sap.m.Text({
+                                        text: sStatus
+                                    })
+                                ]
+                            }),
+                            
+                            // Last update
+                            new sap.m.Text({
+                                text: "Last update: " + sLastUpdate,
+                                class: "sapUiTinyMarginTop"
+                            }),
+                            
+                            // Group
+                            new sap.m.Text({
+                                text: "Group: " + sGroup,
+                                class: "sapUiTinyMarginTop" 
+                            }),
+                            
+                            // Action buttons
+                            new sap.m.Toolbar({
+                                class: "sapUiTinyMarginTop",
+                                content: [
+                                    new sap.m.Button({
+                                        text: "Status",
+                                        type: "Emphasized",
+                                        press: function() {
+                                            showStatusDialog(sId);
+                                        }
+                                    }),
+                                    new sap.m.ToolbarSpacer(),
+                                    new sap.m.Button({
+                                        text: "Alarm",
+                                        press: function() {
+                                            sap.m.MessageBox.information("Alarm for: " + sId);
+                                        }
+                                    }),
+                                    new sap.m.ToolbarSpacer(),
+                                    new sap.m.Button({
+                                        text: "Data", 
+                                        press: function() {
+                                            sap.m.MessageBox.information("Process data for: " + sId);
+                                        }
+                                    })
+                                ]
+                            })
+                        ]
+                    })
+                ]
+            });
+        }
+        
+        function showStatusDialog(sEquipmentId) {
+            sap.m.MessageBox.show("Change status for " + sEquipmentId, {
+                title: "Equipment Status",
+                actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.CANCEL],
+                onClose: function(sAction) {
+                    if (sAction === sap.m.MessageBox.Action.OK) {
+                        sap.m.MessageToast.show("Status updated for " + sEquipmentId);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

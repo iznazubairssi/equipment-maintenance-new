@@ -1,0 +1,130 @@
+<mvc:View
+    controllerName="equipment.app.fiori.controller.Shopfloor"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout"
+    displayBlock="true"
+    height="100%">
+    
+    <Page 
+        id="shopfloorPage"
+        title="Shopfloor View"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+        
+        <headerContent>
+            <!-- Option Tab: Manual/Auto Refresh -->
+            <SegmentedButton id="refreshSegmentedButton" selectedKey="auto">
+                <items>
+                    <SegmentedButtonItem id="autoRefreshItem" text="Auto Refresh" key="auto"/>
+                    <SegmentedButtonItem id="manualRefreshItem" text="Manual Refresh" key="manual"/>
+                </items>
+            </SegmentedButton>
+            
+            <!-- Equipment Group Filter -->
+            <Select id="groupFilterSelect" width="200px">
+                <core:Item id="allItem" key="all" text="All Equipment"/>
+                <core:Item id="prodItem" key="production" text="Production Line"/>
+                <core:Item id="assemblyItem" key="assembly" text="Assembly Area"/>
+            </Select>
+            
+            <!-- Documentation Link -->
+            <Button
+                id="docButton"
+                icon="sap-icon://document"
+                tooltip="Program Documentation"
+                press=".onShowDocumentation"/>
+        </headerContent>
+        
+        <content>
+            <!-- Group Tabs -->
+            <IconTabBar id="groupTabBar" class="sapUiResponsiveContentPadding" select=".onGroupTabSelect">
+                <items>
+                    <IconTabFilter id="allGroupsTab" text="All Equipment" key="all" showAll="true"/>
+                    <IconTabFilter id="productionTab" text="Production Line" key="production" count="2"/>
+                    <IconTabFilter id="assemblyTab" text="Assembly Area" key="assembly" count="1"/>
+                </items>
+            </IconTabBar>
+            
+            <!-- STATIC EQUIPMENT CARDS -->
+            <ScrollContainer id="equipmentScrollContainer" vertical="true" height="100%">
+                <layout:Grid id="equipmentGrid" defaultSpan="XL4 L6 M12 S12">
+                    
+                    <!-- Card 1: Hydraulic Press -->
+                    <Panel id="card1"
+                        headerText="PRESS-001"
+                        expandable="true"
+                        expanded="false"
+                        width="100%">
+                        <content>
+                            <VBox id="card1Content">
+                                <Text id="card1Desc" text="Hydraulic Press" class="sapUiSmallMarginBottom"/>
+                                <HBox id="card1Status">
+                                    <core:HTML id="card1Dot" content='&lt;div style="width:16px;height:16px;background:#4CAF50;border-radius:50%;margin-right:8px;"&gt;&lt;/div&gt;'/>
+                                    <Text id="card1StatusText" text="P1 - Productive"/>
+                                </HBox>
+                                <Text id="card1LastUpdate" text="Last update: 2024-10-31 08:30:45" class="sapUiSmallMarginTop"/>
+                                <Text id="card1Group" text="Group: Production Line" class="sapUiSmallMarginTop"/>
+                                <HBox id="card1Buttons" class="sapUiSmallMarginTop">
+                                    <Button id="card1StatusBtn" text="Status" type="Emphasized" press=".onCard1Status" class="sapUiTinyMarginEnd"/>
+                                    <Button id="card1AlarmBtn" text="Alarm" press=".onCard1Alarm" class="sapUiTinyMarginEnd"/>
+                                    <Button id="card1DataBtn" text="Proc-Data" press=".onCard1Data"/>
+                                </HBox>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Card 2: CNC Milling Machine -->
+                    <Panel id="card2"
+                        headerText="MILL-002"
+                        expandable="true"
+                        expanded="false"
+                        width="100%">
+                        <content>
+                            <VBox id="card2Content">
+                                <Text id="card2Desc" text="CNC Milling Machine" class="sapUiSmallMarginBottom"/>
+                                <HBox id="card2Status">
+                                    <core:HTML id="card2Dot" content='&lt;div style="width:16px;height:16px;background:#8BC34A;border-radius:50%;margin-right:8px;"&gt;&lt;/div&gt;'/>
+                                    <Text id="card2StatusText" text="P2 - Reduced Performance"/>
+                                </HBox>
+                                <Text id="card2LastUpdate" text="Last update: 2024-10-31 09:15:20" class="sapUiSmallMarginTop"/>
+                                <Text id="card2Group" text="Group: Production Line" class="sapUiSmallMarginTop"/>
+                                <HBox id="card2Buttons" class="sapUiSmallMarginTop">
+                                    <Button id="card2StatusBtn" text="Status" type="Emphasized" press=".onCard2Status" class="sapUiTinyMarginEnd"/>
+                                    <Button id="card2AlarmBtn" text="Alarm" press=".onCard2Alarm" class="sapUiTinyMarginEnd"/>
+                                    <Button id="card2DataBtn" text="Proc-Data" press=".onCard2Data"/>
+                                </HBox>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Card 3: Automatic Lathe -->
+                    <Panel id="card3"
+                        headerText="LATHE-003"
+                        expandable="true"
+                        expanded="false"
+                        width="100%">
+                        <content>
+                            <VBox id="card3Content">
+                                <Text id="card3Desc" text="Automatic Lathe" class="sapUiSmallMarginBottom"/>
+                                <HBox id="card3Status">
+                                    <core:HTML id="card3Dot" content='&lt;div style="width:16px;height:16px;background:#F44336;border-radius:50%;margin-right:8px;"&gt;&lt;/div&gt;'/>
+                                    <Text id="card3StatusText" text="R1 - Down"/>
+                                </HBox>
+                                <Text id="card3LastUpdate" text="Last update: 2024-10-31 07:45:10" class="sapUiSmallMarginTop"/>
+                                <Text id="card3Group" text="Group: Production Line" class="sapUiSmallMarginTop"/>
+                                <HBox id="card3Buttons" class="sapUiSmallMarginTop">
+                                    <Button id="card3StatusBtn" text="Status" type="Emphasized" press=".onCard3Status" class="sapUiTinyMarginEnd"/>
+                                    <Button id="card3AlarmBtn" text="Alarm" press=".onCard3Alarm" class="sapUiTinyMarginEnd"/>
+                                    <Button id="card3DataBtn" text="Proc-Data" press=".onCard3Data"/>
+                                </HBox>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                </layout:Grid>
+            </ScrollContainer>
+        </content>
+    </Page>
+</mvc:View>

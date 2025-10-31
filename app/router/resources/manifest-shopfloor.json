@@ -1,0 +1,81 @@
+{
+  "_version": "1.32.0",
+  "sap.app": {
+    "id": "equipment.app.fiori.shopfloor",
+    "type": "application",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Shopfloor View",
+    "description": "Shopfloor Equipment Monitoring",
+    "resources": "resources.json",
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/EquipmentService/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://factory"
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.141.1",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.layout": {}
+      }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "equipment.app.fiori.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server"
+        }
+      }
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.ui.core.routing.Router",
+        "viewType": "XML",
+        "viewPath": "equipment.app.fiori.view",
+        "controlId": "shopfloorPage",
+        "controlAggregation": "content"
+      },
+      "routes": [
+        {
+          "pattern": "shopfloor",
+          "name": "shopfloor",
+          "target": "shopfloor"
+        }
+      ],
+      "targets": {
+        "shopfloor": {
+          "viewName": "Shopfloor",
+          "viewId": "shopfloor"
+        }
+      }
+    }
+  }
+}
