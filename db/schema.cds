@@ -3,7 +3,7 @@ using { managed } from '@sap/cds/common';
 namespace d4iot;
 
 /**
- * Existing Equipment entity
+ * Equipment entity
  */
 entity Equipments : managed {
     key EQUIPMENT            : String(18);
@@ -25,7 +25,8 @@ entity Equipments : managed {
     OTTYPE                   : String;
     LINK                     : String(255);
     LINKTEXT                 : String(40);
-    EQTYPE                   : Association to one EquipmentTypes;
+    EQTYPE_EQTYPE            : String(2); 
+    EQTYPE                   : Association to EquipmentTypes on EQTYPE.EQTYPE = EQTYPE_EQTYPE;
 }
 
 /**
@@ -93,6 +94,7 @@ entity StatusHistory : managed {
     ERRORCODE      : String(5);
     TEXTLINK       : Boolean;
     IGNORERECORD   : String(1);
+    LASTCHANGE     : Timestamp;
     LASTSTATUS     : String(4);
     LENGTHMSEC     : Integer64; // 
 }

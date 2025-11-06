@@ -21,16 +21,23 @@ annotate EquipmentService.Equipments with @(
             { Value: EQUIPMENT, Label: 'Equipment ID' },
             { Value: EQNAME, Label: 'Equipment Name' },
             { Value: EQDESC, Label: 'Description' },
-            { Value: EQTYPE.EQTYPE, Label: 'Type' },
+            { Value: EQSTATUS, Label: 'Status' },
+            { Value: EQTYPE.EQTYPE_DESC, Label: 'Eq. Type' },
             { Value: INACTIVE, Label: 'Inactive' },
-            { Value: EQUNR_SAP, Label: 'SAP Equipment' }
+            { Value: EQUNR_SAP, Label: 'SAP Equipment' },
+            { Value: STATUSSTRUCTURE, Label: 'Status Tab' },
+            { Value: ALARM2STATUS, Label: 'Alarm 2 Status' },
+            { Value: PDATASTRUCTURE, Label: 'PData Config' },
+            { Value: OTTYPE, Label: 'Daemon Type' }
         ],
         
         // List Report Filter Bar
         SelectionFields: [ 
             EQUIPMENT, 
-            EQNAME, 
-            EQTYPE.EQTYPE,
+            EQNAME,
+            EQDESC,
+            EQTYPE_EQTYPE,
+            EQSTATUS,
             INACTIVE,
             EQUNR_SAP
         ],
@@ -48,6 +55,7 @@ annotate EquipmentService.Equipments with @(
             { Value: EQDESC }
         ],
         
+        // Object detail page
         Facets: [
             {
                 $Type: 'UI.CollectionFacet',
@@ -91,36 +99,37 @@ annotate EquipmentService.Equipments with @(
                 { Value: EQUIPMENT, Label: 'Equipment ID' },
                 { Value: EQNAME, Label: 'Equipment Name' },
                 { Value: EQDESC, Label: 'Description' },
-                { Value: EQTYPE.EQTYPE, Label: 'Equipment Type' },
+                { Value: EQTYPE_EQTYPE, Label: 'Equipment Type' },
                 { Value: INACTIVE, Label: 'Inactive?' },
                 { Value: EQUNR_SAP, Label: 'SAP Equipment No.' }
             ]
         },
         FieldGroup#Status: {
             Data: [
+                { Value: EQSTATUS, Label: 'Equipment Status' },
                 { Value: STATUSMANACTIVE, Label: 'Manual Status Creation Active?' },
-                { Value: STATUSSTRUCTURE, Label: 'Status Structure Table' },
-                { Value: STATUSLOGIC, Label: 'Status Logic Table' }
+                { Value: STATUSSTRUCTURE, Label: 'Status Tab' },
+                { Value: STATUSLOGIC, Label: 'Exclusion Tab' }
             ]
         },
         FieldGroup#Network: {
             Data: [
                 { Value: OTACTIVE, Label: 'Network Active?' },
-                { Value: OTTYPE, Label: 'Daemon Type' },
-                { Value: OTDAEMON, Label: 'Daemon ID' }
+                { Value: OTDAEMON, Label: 'DaemonID' },
+                { Value: OTTYPE, Label: 'DaemonType' }
             ]
         },
         FieldGroup#Alarm: {
             Data: [
                 { Value: ALARMMANACTIVE, Label: 'Manual Alarm Creation Active?' },
-                { Value: ALARM2STATUS, Label: 'Alarm 2 Status Active?' },
+                { Value: ALARM2STATUS, Label: 'Alarm 2 Status' },
                 { Value: ALARMSTRUCTURE, Label: 'Alarm Structure Table' }
             ]
         },
         FieldGroup#ProcessData: {
             Data: [
                 { Value: PDATAMANACTIVE, Label: 'Manual Process Data Creation Active?' },
-                { Value: PDATASTRUCTURE, Label: 'Process Data Structure' }
+                { Value: PDATASTRUCTURE, Label: 'ProcessDataTab' }
             ]
         },
         FieldGroup#Links: {
@@ -140,26 +149,85 @@ annotate EquipmentService.Equipments with @(
     }
 );
 
+// Field control annotations
 annotate EquipmentService.Equipments with {
     EQUIPMENT @Common.FieldControl: #Mandatory;
     EQNAME @Common.FieldControl: #Mandatory;
-}
+    EQTYPE_EQTYPE @Common.FieldControl: #Mandatory;
+};
 
+// Text annotation to show description instead of code
+annotate EquipmentService.Equipments with {
+    EQTYPE_EQTYPE @(
+        Common.Text: EQTYPE.EQTYPE_DESC,
+        Common.TextArrangement: #TextOnly
+    );
+};
+
+// ValueList annotation for dropdown
+annotate EquipmentService.Equipments with {
+    EQTYPE_EQTYPE @(
+        Common.ValueList: {
+            CollectionPath: 'EquipmentTypes',
+            Parameters: [
+                { 
+                    $Type: 'Common.ValueListParameterInOut', 
+                    LocalDataProperty: EQTYPE_EQTYPE, 
+                    ValueListProperty: 'EQTYPE' 
+                },
+                { 
+                    $Type: 'Common.ValueListParameterDisplayOnly', 
+                    ValueListProperty: 'EQTYPE_DESC' 
+                }
+            ]
+        },
+        Common.ValueListWithFixedValues: true
+    );
+};
+
+// --- EQUIPMENT TYPES ANNOTATIONS ---
 annotate EquipmentService.EquipmentTypes with @(
     UI: {
         LineItem: [
             { Value: EQTYPE, Label: 'Equipment Type' },
             { Value: EQTYPE_DESC, Label: 'Description' },
+            { Value: EQTYPE_HIERARCHY_CAPABLE, Label: 'Hierarchy Capable'},
             { Value: EQTYPE_STATUS_CAPABLE, Label: 'Status Capable' }
         ],
         SelectionFields: [EQTYPE, EQTYPE_DESC],
         HeaderInfo: {
             TypeName: 'Equipment Type',
-            TypeNamePlural: 'Equipment Types'
-        }
+            TypeNamePlural: 'Equipment Types',
+            Title: { Value: EQTYPE_DESC },
+            Description: { Value: EQTYPE }
+        },
+        Identification: [
+            { Value: EQTYPE },
+            { Value: EQTYPE_DESC }
+        ]
     },
-    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
+    Capabilities: { 
+        Insertable: true, 
+        Updatable: true, 
+        Deletable: true 
+    }
 );
+
+// Make sure EquipmentTypes has proper field controls
+annotate EquipmentService.EquipmentTypes with {
+    EQTYPE @Common.FieldControl: #Mandatory;
+    EQTYPE_DESC @Common.FieldControl: #Mandatory;
+};
+
+// Add text annotation for EquipmentTypes
+annotate EquipmentService.EquipmentTypes with {
+    EQTYPE @(
+        Common.Text: EQTYPE_DESC,
+        Common.TextArrangement: #TextFirst
+    );
+};
+
+// --- OTHER ENTITIES ANNOTATIONS ---
 
 annotate EquipmentService.StatusTypes with @(
     UI: {
@@ -190,7 +258,7 @@ annotate EquipmentService.Status with @(
             { Value: STATUSDESC, Label: 'Description' },
             { Value: STATUSTYPE.STATUSTYPE, Label: 'Status Type' }
         ],
-        SelectionFields: [STATUS, STATUSDESC, STATUSTYPE.STATUSTYPE],
+        SelectionFields: [STATUS, STATUSDESC, STATUSTYPE_STATUSTYPE],
         HeaderInfo: {
             TypeName: 'Status',
             TypeNamePlural: 'Statuses',
@@ -212,7 +280,7 @@ annotate EquipmentService.EquipmentHierarchies with @(
             { Value: EQUIPMENT_SUB.EQNAME, Label: 'Child Equipment' },
             { Value: OrderNo, Label: 'Sort Order' }
         ],
-        SelectionFields: [EQUIPMENT.EQUIPMENT, EQUIPMENT_SUB.EQUIPMENT],
+        SelectionFields: [EQUIPMENT_EQUIPMENT, EQUIPMENT_SUB_EQUIPMENT],
         HeaderInfo: {
             TypeName: 'Hierarchy',
             TypeNamePlural: 'Hierarchies',
@@ -230,14 +298,14 @@ annotate EquipmentService.EquipmentStatus with @(
             { Value: LASTSTATUS.STATUS, Label: 'Last Status' },
             { Value: LASTSTATUSCHANGE, Label: 'Last Change' }
         ],
-        SelectionFields: [EQUIPMENT.EQUIPMENT, LASTSTATUS.STATUS],
+        SelectionFields: [EQUIPMENT_EQUIPMENT, LASTSTATUS_STATUS],
         HeaderInfo: {
             TypeName: 'Current Status',
             TypeNamePlural: 'Current Statuses',
             Title: { Value: EQUIPMENT.EQNAME }
         }
     },
-    Capabilities: { Insertable: true, UpFdatable: true, Deletable: true }
+    Capabilities: { Insertable: true, Updatable: true, Deletable: true }
 );
 
 annotate EquipmentService.StatusHistory with @(
@@ -249,7 +317,7 @@ annotate EquipmentService.StatusHistory with @(
             { Value: LENGTHMSEC, Label: 'Duration (ms)' },
             { Value: SOURCE, Label: 'Source' }
         ],
-        SelectionFields: [EQUIPMENT.EQUIPMENT, STATUS.STATUS, SOURCE],
+        SelectionFields: [EQUIPMENT_EQUIPMENT, STATUS_STATUS, SOURCE],
         HeaderInfo: {
             TypeName: 'Status History',
             TypeNamePlural: 'Status Histories',

@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/odata/v4/equipment/",
+        "uri": "/odata/v4/EquipmentService/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -45,7 +45,7 @@
   "sap.ui5": {
     "flexEnabled": true,
     "dependencies": {
-      "minUI5Version": "1.141.1",
+      "minUI5Version": "1.108.0",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
@@ -71,17 +71,16 @@
           "autoExpandSelect": true,
           "earlyRequests": true
         }
-      },
-      "@i18n": {
-        "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
       }
     },
     "resources": {
-      "css": []
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
     },
     "routing": {
-      "config": {},
       "routes": [
         {
           "pattern": ":?query:",
@@ -92,6 +91,11 @@
           "pattern": "Equipments({key}):?query:",
           "name": "EquipmentsObjectPage",
           "target": "EquipmentsObjectPage"
+        },
+        {
+          "pattern": "shopfloor-view",
+          "name": "ShopfloorViewRoute",
+          "target": "ShopfloorViewTarget"
         }
       ],
       "targets": {
@@ -130,6 +134,12 @@
               "contextPath": "/Equipments"
             }
           }
+        },
+        "ShopfloorViewTarget": {
+          "viewName": "equipment.app.fiori.ext.view.ShopfloorView",
+          "viewId": "ShopfloorViewView",
+          "viewLevel": 1,
+          "type": "View"
         }
       }
     }

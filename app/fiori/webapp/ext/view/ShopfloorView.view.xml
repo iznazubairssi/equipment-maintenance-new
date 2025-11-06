@@ -1,0 +1,75 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    controllerName="equipment.app.fiori.ext.controller.ShopfloorView"
+    displayBlock="true"
+    height="100%">
+
+    <Page id="shopfloorPage" title="Shopfloor View" titleAlignment="Center">
+        <headerContent>
+            <Button id="btnRefresh" icon="sap-icon://refresh" text="Refresh" press=".onPressRefresh"/>
+            <Button id="btnGroups" icon="sap-icon://group-2" text="Groups"/>
+            <Button id="btnOptions" icon="sap-icon://action-settings" text="Options" press=".onPressOptions"/>
+        </headerContent>
+
+        <content>
+            <IconTabBar
+                id="iconTabBarGroups"
+                select=".onGroupSelect"
+                class="sapUiResponsiveContentPadding"
+                items="{shopfloor>/Groups}">
+                <items>
+                    <IconTabFilter key="{shopfloor>key}" text="{shopfloor>text}" count="{shopfloor>count}"/>
+                </items>
+            </IconTabBar>
+
+            <f:GridContainer
+                id="gridContainerEquipment"
+                items="{shopfloor>/Equipments}"
+                class="sapUiSmallMargin">
+                <f:layout>
+                    <f:GridContainerSettings rowSize="170px" columnSize="400px" gap="1rem" />
+                </f:layout>
+                <f:items>
+                    
+                    <HBox class="sc-container {shopfloor>StatusClass}">
+                        
+                        <VBox class="sc-left-area">
+                            <Label text="{shopfloor>Status}" class="sc-state-circle" />
+                        </VBox>
+
+                        <VBox class="sc-content">
+                            <Text text="{shopfloor>EquipmentID}" class="sc-content-header" />
+                            <Text text="{shopfloor>Description}" class="sc-content-description" />
+                            
+                            <VBox growFactor="1">
+                                 <Label text="Treiber: {shopfloor>Driver}" />
+                            </VBox>
+
+                            <Text text="{
+                                path: 'shopfloor>LastChange',
+                                formatter: '.formatDate'
+                            }" class="sc-content-footer" />
+                        </VBox>
+
+                        <VBox class="sc-right">
+                            <Button text="Status" class="sc-btn" press=".onPressCardAction">
+                                 <customData><core:CustomData key="actionType" value="Status" /></customData>
+                            </Button>
+                            <Button text="Alarm" class="sc-btn" press=".onPressCardAction">
+                                 <customData><core:CustomData key="actionType" value="Alarm" /></customData>
+                            </Button>
+                            <Button text="Proc.Data" class="sc-btn" press=".onPressCardAction">
+                                 <customData><core:CustomData key="actionType" value="ProcData" /></customData>
+                            </Button>
+                        </VBox>
+
+                    </HBox>
+                    </f:items>
+            </f:GridContainer>
+        </content>
+    </Page>
+</mvc:View>

@@ -7,7 +7,7 @@
 |**Generation Platform**<br>SAP Business Application Studio|
 |**Template Used**<br>List Report Page V4|
 |**Service Type**<br>Local CAP|
-|**Service URL**<br>http://localhost:4004/odata/v4/equipment/|
+|**Service URL**<br>http://localhost:4004/odata/v4/EquipmentService/|
 |**Module Name**<br>fiori|
 |**Application Title**<br>App Title|
 |**Namespace**<br>equipment.app|
