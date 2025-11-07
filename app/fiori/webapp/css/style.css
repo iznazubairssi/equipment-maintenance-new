@@ -1,97 +1,151 @@
-/* Global Variables from legacy design */
+/* Global Variables */
 :root {
     --sc-container-height: 150px;
     --sc-content-color: #eee;
 }
 
-/* --- Status Color Definitions --- */
-.sc-type-prod { --sc-state-color: #00d400; }
-.sc-type-idle { --sc-state-color: gold; }
-.sc-type-down { --sc-state-color: #ff6a00; }
-.sc-type-maint { --sc-state-color: #66CCFF; }
-
-/* --- 1. Main Card Container --- */
-.sc-container {
-    height: var(--sc-container-height);
-    background-color: var(--sc-state-color);
-    border-radius: 15px 20px 15px 15px; /* Exact legacy radius */
-    min-width: 395px;
-    max-width: 500px; /* Kept from legacy, but might need adjustment for Fiori responsive grid */
-    box-shadow: inset 0 -1px 1px #28282880; /* sc-shadow */
-    overflow: hidden; /* Ensures children don't bleed out of custom radius */
+/* --- Page Title --- */
+.shopfloor-page-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
 }
 
-/* --- 2. Left Status Circle Area --- */
+.shopfloor-toolbar {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
+.shopfloor-toolbar .sapMTitle {
+    text-align: center !important;
+    width: 100% !important;
+}
+
+/* --- Status Color Definitions --- */
+.sc-type-prod { --sc-state-color: #008000; }
+.sc-type-prod2 { --sc-state-color: #90EE90; }
+.sc-type-idle { --sc-state-color: #FFFF00; }
+.sc-type-down { --sc-state-color: #FF0000; }
+.sc-type-maint { --sc-state-color: #8B0000; }
+.sc-type-eng { --sc-state-color: #0000FF; }
+.sc-type-setup { --sc-state-color: #ADD8E6; }
+
+/* --- Card Container --- */
+.sc-card-wrapper {
+    cursor: pointer;
+}
+
+.sc-container {
+    height: var(--sc-container-height);
+    border-radius: 15px 20px 15px 15px;
+    min-width: 395px;
+    max-width: 500px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    overflow: hidden;
+    display: flex;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sc-card-wrapper:hover .sc-container {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.sc-card-wrapper:active .sc-container {
+    transform: translateY(0);
+}
+
+.sc-driver-spacer {
+    flex-grow: 1;
+}
+
+/* --- Left Status Circle Area --- */
 .sc-left-area {
-    min-width: 70px; /* Fixed width for the colored left strip */
+    min-width: 70px;
     display: flex;
     justify-content: center;
     align-items: center;
+    border-radius: 15px 0 0 15px;
 }
 
 .sc-state-circle {
     width: 50px;
     height: 50px;
-    border-radius: 25px; /* Perfect circle */
-    background-color: rgba(238, 238, 238, 0.81); /* #eeeeeecf from legacy */
+    border-radius: 25px;
+    background-color: rgba(238, 238, 238, 0.9);
     color: black;
-    font-size: x-large;
+    font-size: 1.5rem;
     font-weight: 700;
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* --- 3. Middle Content Area --- */
+/* --- Middle Content Area --- */
 .sc-content {
     flex-grow: 1;
     background-color: var(--sc-content-color);
-    border-radius: 3px 0 0 10px; /* Exact legacy radius */
-    padding: 1px 0 0 8px;
-    margin-bottom: 17px; /* Spacing from bottom edge */
+    padding: 8px 0 4px 10px;
+    margin-bottom: 17px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .sc-content-header {
-    height: 30px;
-    font-size: 25px;
+    height: 28px;
+    font-size: 1.25rem;
     font-weight: bold;
     color: #000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 28px;
 }
 
 .sc-content-description {
-    height: 26px;
-    font-size: 12px;
+    height: 20px;
+    font-size: 0.875rem;
     color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 20px;
+}
+
+.sc-content-small-text {
+    font-size: 0.75rem;
+    color: #555;
 }
 
 .sc-content-footer {
-    font-size: 11px;
+    font-size: 0.75rem;
     font-weight: bold;
     color: #000;
     text-align: center;
-    margin-top: auto; /* Pushes to bottom of sc-content */
-    margin-bottom: 2px;
+    margin-top: auto;
+    margin-bottom: 4px;
 }
 
-/* --- 4. Right Action Area --- */
+/* --- Right Action Area --- */
 .sc-right {
     width: 100px;
     background-color: var(--sc-content-color);
-    border-radius: 0 15px 0 0; /* Exact legacy radius */
+    border-radius: 0 15px 0 0;
     padding-top: 15px;
     padding-left: 5px;
-    margin-bottom: 17px; /* Matches sc-content margin */
+    margin-bottom: 17px;
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
 
-/* Custom styling for standard UI5 buttons to match legacy .sc-btn */
+.sc-btn {
+    width: 90px;
+}
+
 .sc-btn .sapMBtnInner {
     background-color: #888;
     color: var(--sc-content-color);
@@ -101,11 +155,57 @@
     height: 30px;
     line-height: 30px;
     font-weight: 400;
-    font-size: large;
+    font-size: 0.875rem;
     padding: 0;
+    min-width: 85px;
 }
 
 .sc-btn:hover .sapMBtnInner {
-    background-color: var(--sc-state-color);
-    color: #444;
+    background-color: #666;
+}
+
+.sc-btn .sapMBtnInner.sapMBtnDisabled {
+    background-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* --- Status Dialog Styling --- */
+.status-pill-container {
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-pill-container:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    border-color: #0070f2 !important;
+}
+
+.status-pill-container:active {
+    transform: translateX(2px);
+}
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+    .sc-container {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .shopfloor-page-title {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* --- Loading States --- */
+.sapUiBusy {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.sapUiRefreshTitleMarginTop {
+    padding-top: 30px;
 }

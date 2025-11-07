@@ -1,4 +1,11 @@
 EQUIPMENT,EQNAME,EQDESC,EQSTATUS,INACTIVE,EQUNR_SAP,STATUSMANACTIVE,STATUSSTRUCTURE,STATUSLOGIC,ALARMMANACTIVE,ALARM2STATUS,ALARMSTRUCTURE,PDATAMANACTIVE,PDATASTRUCTURE,OTACTIVE,OTDAEMON,OTTYPE,LINK,LINKTEXT,EQTYPE_EQTYPE
-BA0001,Machine 1,Test Machine 1,1,,EQUIP001,true,STATUS_TAB_1,LOGIC_1,false,false,ALARM_TAB_1,true,PDATA_TAB_1,true,DAEMON_1,TYPE_1,http://example.com,Example Link,MA
-BA0002,Machine 2,Test Machine 2,1,X,EQUIP002,false,STATUS_TAB_2,LOGIC_2,true,true,ALARM_TAB_2,false,PDATA_TAB_2,false,DAEMON_2,TYPE_2,http://example2.com,Example Link 2,MG
-BA0003,Machine Group,Test Machine Group,1,,EQUIP003,true,STATUS_TAB_3,LOGIC_3,true,false,ALARM_TAB_3,true,PDATA_TAB_3,true,DAEMON_3,TYPE_3,http://example3.com,Example Link 3,MG
+FILLING-GROUP,FILLING MACHINES,Filling machine group,1,,GRP001,false,,,false,false,,false,,false,,,http://example.com,Group Link,MG
+LINIE01-GROUP,LINIE JG01,Production line JG01,1,,GRP002,false,,,false,false,,false,,false,,,http://example.com,Group Link,MG
+FILLING-01,Filling Machine 1,Automatic filling machine 1,1,,EQUIP001,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-FILL,TYPE_1,http://example.com,Machine Link,MA
+FILLING-02,Filling Machine 2,Automatic filling machine 2,1,,EQUIP002,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-FILL,TYPE_1,http://example.com,Machine Link,MA
+FILLING-03,Filling Machine 3,Automatic filling machine 3,1,,EQUIP003,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-FILL,TYPE_1,http://example.com,Machine Link,MA
+OPC-UA-DEMO-ERL,OPC-UA Demo,OPC-UA Demo Machine,1,,EQUIP004,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,SENSRY,TYPE_2,http://example.com,Machine Link,MA
+CNC-AGH-01,CNC Mill 01,CNC Milling Station 1,1,,EQUIP005,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,Z4IOTTEST,TYPE_2,http://example.com,Machine Link,MA
+BESCHR-LASER-02,Laser Mark 02,Laser Marking Unit,1,,EQUIP006,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,Z4IOT-DEMO,TYPE_2,http://example.com,Machine Link,MA
+LINIE01-ROBOT-01,Robot Arm 01,Robotic arm station 1,1,,EQUIP007,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-ROBOT,TYPE_3,http://example.com,Machine Link,MA
+LINIE01-CONV-01,Conveyor 01,Main conveyor belt,1,,EQUIP008,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-CONV,TYPE_3,http://example.com,Machine Link,MA

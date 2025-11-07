@@ -3,73 +3,255 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:core="sap.ui.core"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     controllerName="equipment.app.fiori.ext.controller.ShopfloorView"
     displayBlock="true"
     height="100%">
 
-    <Page id="shopfloorPage" title="Shopfloor View" titleAlignment="Center">
-        <headerContent>
-            <Button id="btnRefresh" icon="sap-icon://refresh" text="Refresh" press=".onPressRefresh"/>
-            <Button id="btnGroups" icon="sap-icon://group-2" text="Groups"/>
-            <Button id="btnOptions" icon="sap-icon://action-settings" text="Options" press=".onPressOptions"/>
-        </headerContent>
+    <Page id="shopfloorPage" titleAlignment="Center" showHeader="true">
+        <customHeader>
+            <Toolbar id="shopfloorToolbar" class="sapUiMediumMarginBottom shopfloor-toolbar">
+                <ToolbarSpacer id="toolbarSpacerLeft"/>
+                <Title id="shopfloorTitle" text="Shopfloor View" class="shopfloor-page-title"/>
+                <ToolbarSpacer id="toolbarSpacerRight"/>
+                <Button 
+                    id="btnRefresh" 
+                    icon="sap-icon://refresh" 
+                    tooltip="Refresh" 
+                    press=".onPressRefresh"
+                    enabled="{= !${viewModel>/isLoading}}"/>
+                <Button 
+                    id="btnFilter" 
+                    icon="sap-icon://filter" 
+                    tooltip="Filter Equipment Groups" 
+                    press=".onPressFilter"/>
+                <Button 
+                    id="btnDocumentation" 
+                    icon="sap-icon://doc-attachment" 
+                    tooltip="Documentation" 
+                    press=".onPressDocumentation"/>
+                <Button 
+                    id="btnOptions" 
+                    icon="sap-icon://action-settings" 
+                    tooltip="Options" 
+                    press=".onPressOptions"/>
+            </Toolbar>
+        </customHeader>
 
         <content>
+            <!-- Equipment Groups Tabs -->
             <IconTabBar
                 id="iconTabBarGroups"
                 select=".onGroupSelect"
+                selectedKey="{viewModel>/selectedGroup}"
                 class="sapUiResponsiveContentPadding"
-                items="{shopfloor>/Groups}">
+                items="{groups>/Groups}">
                 <items>
-                    <IconTabFilter key="{shopfloor>key}" text="{shopfloor>text}" count="{shopfloor>count}"/>
+                    <IconTabFilter 
+                        id="iconTabFilter"
+                        key="{groups>key}" 
+                        text="{groups>text}"/>
                 </items>
             </IconTabBar>
 
+            <!-- Loading Indicator -->
+            <BusyIndicator 
+                id="busyIndicator"
+                visible="{viewModel>/isLoading}" 
+                class="sapUiMediumMargin"/>
+
+            <!-- Equipment Grid -->
             <f:GridContainer
                 id="gridContainerEquipment"
+                visible="{= !${viewModel>/isLoading}}"
                 items="{shopfloor>/Equipments}"
                 class="sapUiSmallMargin">
                 <f:layout>
-                    <f:GridContainerSettings rowSize="170px" columnSize="400px" gap="1rem" />
+                    <f:GridContainerSettings 
+                        id="gridSettings"
+                        rowSize="150px" 
+                        columnSize="400px" 
+                        gap="1rem" />
                 </f:layout>
                 <f:items>
                     
-                    <HBox class="sc-container {shopfloor>StatusClass}">
-                        
-                        <VBox class="sc-left-area">
-                            <Label text="{shopfloor>Status}" class="sc-state-circle" />
-                        </VBox>
-
-                        <VBox class="sc-content">
-                            <Text text="{shopfloor>EquipmentID}" class="sc-content-header" />
-                            <Text text="{shopfloor>Description}" class="sc-content-description" />
+                    <!-- Wrapper VBox for each card - click handled via DOM -->
+                    <VBox id="cardWrapper" class="sc-card-wrapper">
+                        <HBox id="cardContainer" class="sc-container">
                             
-                            <VBox growFactor="1">
-                                 <Label text="Treiber: {shopfloor>Driver}" />
+                            <!-- Left Status Circle Area with color -->
+                            <core:HTML 
+                                id="leftAreaHtml"
+                                content="&lt;div class='sc-left-area' style='min-width: 70px; background-color: {shopfloor>ColorHex}; display: flex; justify-content: center; align-items: center; border-radius: 15px 0 0 15px;'&gt;&lt;div class='sc-state-circle' style='width: 50px; height: 50px; border-radius: 25px; background-color: rgba(238, 238, 238, 0.9); display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'&gt;&lt;span style='display: block; width: 100%; text-align: center; font-size: 1.5rem; font-weight: 700; color: black;'&gt;{shopfloor>Status}&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;"/>
+
+                            <!-- Middle Content Area -->
+                            <VBox id="contentArea" class="sc-content">
+                                <Text 
+                                    id="equipmentIdText"
+                                    text="{shopfloor>EquipmentID}" 
+                                    class="sc-content-header" />
+                                <Text 
+                                    id="equipmentDescText"
+                                    text="{shopfloor>Description}" 
+                                    class="sc-content-description" />
+                                
+                                <VBox id="driverBox" class="sapUiTinyMarginTop sc-driver-spacer">
+                                    <Label id="driverLabel" text="Driver: {shopfloor>Driver}" class="sc-content-small-text"/>
+                                </VBox>
+
+                                <Text 
+                                    id="lastChangeText"
+                                    text="{
+                                        path: 'shopfloor>LastChange',
+                                        formatter: '.formatDate'
+                                    }" 
+                                    class="sc-content-footer" />
                             </VBox>
 
-                            <Text text="{
-                                path: 'shopfloor>LastChange',
-                                formatter: '.formatDate'
-                            }" class="sc-content-footer" />
-                        </VBox>
+                            <!-- Right Action Area -->
+                            <VBox id="actionArea" class="sc-right">
+                                <Button 
+                                    id="btnStatus"
+                                    text="Status" 
+                                    class="sc-btn" 
+                                    press=".onPressCardAction"
+                                    enabled="{= !!${shopfloor>StatusStructure}}">
+                                    <customData>
+                                        <core:CustomData 
+                                            key="actionType" 
+                                            value="Status" />
+                                    </customData>
+                                </Button>
+                                <Button 
+                                    id="btnAlarm"
+                                    text="Alarm" 
+                                    class="sc-btn" 
+                                    press=".onPressCardAction"
+                                    enabled="{= !!${shopfloor>AlarmStructure}}">
+                                    <customData>
+                                        <core:CustomData 
+                                            key="actionType" 
+                                            value="Alarm" />
+                                    </customData>
+                                </Button>
+                                <Button 
+                                    id="btnProcData"
+                                    text="Proc.Data" 
+                                    class="sc-btn" 
+                                    press=".onPressCardAction"
+                                    enabled="{= !!${shopfloor>PDataStructure}}">
+                                    <customData>
+                                        <core:CustomData 
+                                            key="actionType" 
+                                            value="ProcData" />
+                                    </customData>
+                                </Button>
+                            </VBox>
 
-                        <VBox class="sc-right">
-                            <Button text="Status" class="sc-btn" press=".onPressCardAction">
-                                 <customData><core:CustomData key="actionType" value="Status" /></customData>
-                            </Button>
-                            <Button text="Alarm" class="sc-btn" press=".onPressCardAction">
-                                 <customData><core:CustomData key="actionType" value="Alarm" /></customData>
-                            </Button>
-                            <Button text="Proc.Data" class="sc-btn" press=".onPressCardAction">
-                                 <customData><core:CustomData key="actionType" value="ProcData" /></customData>
-                            </Button>
-                        </VBox>
-
-                    </HBox>
-                    </f:items>
+                        </HBox>
+                    </VBox>
+                    
+                </f:items>
             </f:GridContainer>
+
+            <!-- Empty State Message -->
+            <VBox 
+                id="emptyState"
+                alignItems="Center" 
+                justifyContent="Center"
+                visible="{= !${viewModel>/isLoading} &amp;&amp; ${shopfloor>/Equipments}.length === 0}"
+                class="sapUiLargeMarginTop">
+                <core:Icon 
+                    id="emptyIcon"
+                    src="sap-icon://machine" 
+                    size="4rem" 
+                    color="#666"/>
+                <Text 
+                    id="emptyText"
+                    text="No equipment found for the selected group" 
+                    class="sapUiMediumMarginTop"/>
+            </VBox>
         </content>
     </Page>
+
+    <!-- Status Change Dialog -->
+    <Dialog
+        id="statusDialog"
+        title="Change Equipment Status: {statusDialog>/equipmentName}"
+        contentWidth="500px"
+        resizable="true"
+        draggable="true">
+        <content>
+            <VBox id="dialogContent" class="sapUiMediumMargin">
+                <Label id="selectStatusLabel" text="Select Status:" class="sapUiSmallMarginBottom"/>
+                <ScrollContainer id="statusScroll" height="300px" vertical="true">
+                    <VBox 
+                        id="statusList"
+                        items="{
+                            path: 'statusDialog>/availableStatuses'
+                        }">
+                        <items>
+                            <core:HTML 
+                                id="statusPillHtml"
+                                content="&lt;div class='status-pill-container' data-status-code='{statusDialog>STATUS}' onclick='window.selectStatus(event)' style='display: flex; align-items: stretch; margin: 8px 0; border: 2px solid transparent; border-radius: 8px; cursor: pointer; overflow: hidden; height: 60px; background-color: {statusDialog>ColorHex};'&gt;&lt;div style='min-width: 60px; display: flex; align-items: center; justify-content: center; background-color: rgba(255,255,255,0.2);'&gt;&lt;div style='width: 45px; height: 45px; border-radius: 50%; background-color: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; color: #000;'&gt;{statusDialog>STATUS}&lt;/div&gt;&lt;/div&gt;&lt;div style='flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; background-color: rgba(255,255,255,0.85);'&gt;&lt;div style='font-size: 0.875rem; font-weight: 600; color: #000; margin-bottom: 2px;'&gt;{statusDialog>STATUSDESC}&lt;/div&gt;&lt;div style='font-size: 0.75rem; color: #666;'&gt;{statusDialog>StatusTypeDesc}&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;"/>
+                        </items>
+                    </VBox>
+                </ScrollContainer>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button 
+                id="btnApplyStatus"
+                text="Apply" 
+                type="Emphasized" 
+                press=".onApplyStatus"
+                enabled="{= ${statusDialog>/selectedStatus} !== null}"/>
+        </beginButton>
+        <endButton>
+            <Button id="btnCancelStatus" text="Cancel" press=".onCloseStatusDialog"/>
+        </endButton>
+    </Dialog>
+
+    <!-- Options Dialog -->
+    <Dialog
+        id="optionsDialog"
+        title="Shopfloor Options"
+        contentWidth="400px">
+        <content>
+            <VBox id="optionsContent" class="sapUiMediumMargin">
+                <Label id="autoRefreshLabel" text="Auto-Refresh Settings:" class="sapUiSmallMarginBottom"/>
+                
+                <CheckBox 
+                    id="chkAutoRefresh" 
+                    text="Enable Auto-Refresh" 
+                    selected="{optionsModel>/autoRefreshEnabled}"
+                    select=".onAutoRefreshToggle"/>
+                
+                <VBox id="refreshIntervalBox" class="sapUiSmallMarginTop" visible="{optionsModel>/autoRefreshEnabled}">
+                    <Label id="intervalLabel" text="Refresh Interval (seconds):" class="sapUiTinyMarginBottom"/>
+                    <Slider 
+                        id="sliderInterval"
+                        min="10" 
+                        max="300" 
+                        step="10"
+                        value="{optionsModel>/refreshInterval}"
+                        width="100%"
+                        enableTickmarks="true"
+                        inputsAsTooltips="true"
+                        change=".onRefreshIntervalChange"/>
+                    <Text id="intervalText" text="Current: {optionsModel>/refreshInterval} seconds" class="sapUiRefreshTitleMarginTop"/>
+                </VBox>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button 
+                id="btnSaveOptions"
+                text="Save" 
+                type="Emphasized" 
+                press=".onSaveOptions"/>
+        </beginButton>
+        <endButton>
+            <Button id="btnCancelOptions" text="Cancel" press=".onCloseOptionsDialog"/>
+        </endButton>
+    </Dialog>
+
 </mvc:View>
