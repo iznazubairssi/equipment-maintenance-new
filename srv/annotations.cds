@@ -1,5 +1,6 @@
 using EquipmentService from './service';
 
+annotate EquipmentService.Equipments with @odata.draft.enabled;
 // Enable Create, Update, and Delete buttons in the UI
 annotate EquipmentService.Equipments with @(
     UI: {
@@ -156,7 +157,6 @@ annotate EquipmentService.Equipments with {
     EQTYPE_EQTYPE @Common.FieldControl: #Mandatory;
 };
 
-// Text annotation to show description instead of code
 annotate EquipmentService.Equipments with {
     EQTYPE_EQTYPE @(
         Common.Text: EQTYPE.EQTYPE_DESC,
@@ -164,7 +164,6 @@ annotate EquipmentService.Equipments with {
     );
 };
 
-// ValueList annotation for dropdown
 annotate EquipmentService.Equipments with {
     EQTYPE_EQTYPE @(
         Common.ValueList: {
@@ -185,7 +184,6 @@ annotate EquipmentService.Equipments with {
     );
 };
 
-// --- EQUIPMENT TYPES ANNOTATIONS ---
 annotate EquipmentService.EquipmentTypes with @(
     UI: {
         LineItem: [
@@ -213,21 +211,17 @@ annotate EquipmentService.EquipmentTypes with @(
     }
 );
 
-// Make sure EquipmentTypes has proper field controls
 annotate EquipmentService.EquipmentTypes with {
     EQTYPE @Common.FieldControl: #Mandatory;
     EQTYPE_DESC @Common.FieldControl: #Mandatory;
 };
 
-// Add text annotation for EquipmentTypes
 annotate EquipmentService.EquipmentTypes with {
     EQTYPE @(
         Common.Text: EQTYPE_DESC,
         Common.TextArrangement: #TextFirst
     );
 };
-
-// --- OTHER ENTITIES ANNOTATIONS ---
 
 annotate EquipmentService.StatusTypes with @(
     UI: {

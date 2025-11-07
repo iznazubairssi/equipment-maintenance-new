@@ -22,7 +22,7 @@ sap.ui.define([
             // Options model for auto-refresh settings
             var oOptionsModel = new JSONModel({
                 autoRefreshEnabled: true,
-                refreshInterval: 60
+                refreshInterval: 60 // Default 60 seconds
             });
             this.getView().setModel(oOptionsModel, "optionsModel");
 
@@ -32,7 +32,7 @@ sap.ui.define([
             // Global function for status pill selection
             window.selectStatus = function(event) {
                 var statusCode = event.currentTarget.getAttribute('data-status-code');
-                // console.log("Status pill clicked:", statusCode);
+                console.log("Status pill clicked:", statusCode);
                 
                 var oView = sap.ui.getCore().byId("__component0---ShopfloorViewView");
                 if (oView) {
@@ -54,6 +54,7 @@ sap.ui.define([
                 }
             };
 
+            // Attach card click handlers after rendering
             this.getView().addEventDelegate({
                 onAfterRendering: function() {
                     setTimeout(() => {

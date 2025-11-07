@@ -1,17 +1,10 @@
 {
-  "authenticationMethod": "none",
   "welcomeFile": "index.html",
+  "authenticationMethod": "none",
   "routes": [
     {
-      "source": "^/odata/v4/(.*)$",
-      "target": "/odata/v4/$1", 
-      "destination": "srv-api",
-      "authenticationType": "none"
-    },
-    {
       "source": "^/(.*)$",
-      "target": "/$1",
-      "localDir": "resources",
+      "target": "$1",
       "authenticationType": "none"
     }
   ]

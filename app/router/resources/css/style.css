@@ -171,20 +171,9 @@
 }
 
 /* --- Status Dialog Styling --- */
-#statusDialog .sapMDialogSection {
-    max-width: 100%;
-}
-
-#statusDialog #statusScroll {
-    padding: 0 20px;
-}
-
 .status-pill-container {
     transition: all 0.2s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 450px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .status-pill-container:hover {

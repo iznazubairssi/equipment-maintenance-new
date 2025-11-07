@@ -1,2 +1,12 @@
-sap.ui.define(["sap/fe/core/AppComponent"],function(e){"use strict";return e.extend("equipment.app.fiori.Component",{metadata:{manifest:"json"}})});
-//# sourceMappingURL=Component.js.map
+sap.ui.define(
+    ["sap/fe/core/AppComponent"],
+    function (Component) {
+        "use strict";
+
+        return Component.extend("equipment.app.fiori.Component", {
+            metadata: {
+                manifest: "json"
+            }
+        });
+    }
+);

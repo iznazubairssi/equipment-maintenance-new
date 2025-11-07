@@ -1,2 +1,17 @@
-sap.ui.define(["sap/fe/test/ObjectPage"],function(e){"use strict";var t={actions:{},assertions:{}};return new e({appId:"equipment.app.fiori",componentId:"EquipmentsObjectPage",contextPath:"/Equipments"},t)});
-//# sourceMappingURL=EquipmentsObjectPage.js.map
+sap.ui.define(['sap/fe/test/ObjectPage'], function(ObjectPage) {
+    'use strict';
+
+    var CustomPageDefinitions = {
+        actions: {},
+        assertions: {}
+    };
+
+    return new ObjectPage(
+        {
+            appId: 'equipment.app.fiori',
+            componentId: 'EquipmentsObjectPage',
+            contextPath: '/Equipments'
+        },
+        CustomPageDefinitions
+    );
+});

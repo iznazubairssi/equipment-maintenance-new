@@ -177,14 +177,13 @@
     <Dialog
         id="statusDialog"
         title="Change Equipment Status: {statusDialog>/equipmentName}"
-        contentWidth="1100px"
-        contentHeight="80%"
+        contentWidth="500px"
         resizable="true"
         draggable="true">
         <content>
             <VBox id="dialogContent" class="sapUiMediumMargin">
                 <Label id="selectStatusLabel" text="Select Status:" class="sapUiSmallMarginBottom"/>
-                <ScrollContainer id="statusScroll" height="550px" vertical="true">
+                <ScrollContainer id="statusScroll" height="300px" vertical="true">
                     <VBox 
                         id="statusList"
                         items="{

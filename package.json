@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "cds-serve",
-    "deploy": "cds deploy --to postgres --no-build"
+    "deploy": "cds deploy --to postgres --profile production"
   },
   "cds": {
     "requires": {
