@@ -1,6 +1,5 @@
 using EquipmentService from './service';
 
-annotate EquipmentService.Equipments with @odata.draft.enabled;
 // Enable Create, Update, and Delete buttons in the UI
 annotate EquipmentService.Equipments with @(
     UI: {

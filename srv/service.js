@@ -1,5 +1,4 @@
 const cds = require('@sap/cds');
-const { initializeStatusData } = require('./lib/init-data');
 
 module.exports = class EquipmentService extends cds.ApplicationService {
     
@@ -14,9 +13,6 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             EquipmentStatus, 
             StatusHistory 
         } = this.entities;
-
-        // Auto-deploy database schema to PostgreSQL
-        await this.deployDatabaseSchema();
 
         const managedEntities = [
             Equipments, 
@@ -105,43 +101,5 @@ module.exports = class EquipmentService extends cds.ApplicationService {
         });
 
         await super.init();
-    }
-
-    async deployDatabaseSchema() {
-        try {
-            console.log('🔗 Connecting to PostgreSQL...');
-            const db = await cds.connect.to('db');
-            
-            await db.run('SELECT 1 as test');
-            console.log('✅ Database connection test passed');
-            
-            const tables = await db.run(`
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public'
-                AND (
-                    table_name LIKE 'd4iot_equipments' OR 
-                    table_name LIKE 'd4iot_equipmenttypes' OR
-                    table_name LIKE 'd4iot_statustypes' OR
-                    table_name LIKE 'd4iot_status' OR
-                    table_name LIKE 'd4iot_equipmenthierarchies' OR
-                    table_name LIKE 'd4iot_equipmentstatus' OR
-                    table_name LIKE 'd4iot_statushistory'
-                )
-            `);
-            
-            if (tables.length < 7) {
-                console.log('🔄 Deploying database schema to PostgreSQL...');
-                await cds.deploy('./gen/db').to('db');
-                console.log('✅ Database schema deployed successfully');
-                
-                await initializeStatusData(db);
-            } else {
-                console.log('✅ Database tables already exist:', tables.map(t => t.table_name));
-            }
-            
-        } catch (error) {
-            console.error('❌ Database setup failed:', error.message);
-        }
     }
 };

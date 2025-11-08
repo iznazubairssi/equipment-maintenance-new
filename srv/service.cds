@@ -3,6 +3,7 @@ using { d4iot } from '../db/schema';
 @path: 'EquipmentService'
 service EquipmentService {
 
+    @odata.draft.enabled
     entity Equipments as projection on d4iot.Equipments;
     entity EquipmentTypes as projection on d4iot.EquipmentTypes;
     entity StatusTypes as projection on d4iot.StatusTypes;

@@ -97,6 +97,11 @@
                     
                     <VBox id="cardWrapper" class="sc-card-wrapper {= ${shopfloor>IsSubGroup} ? 'sc-subgroup-card' : ''}">
                         
+                        <!-- Clickable overlay -->
+                        <core:HTML 
+                            id="cardClickOverlay"
+                            content="&lt;div class='card-click-overlay' data-equipment-id='{shopfloor>EquipmentID}' data-is-subgroup='{shopfloor>IsSubGroup}' style='position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; cursor: pointer;'&gt;&lt;/div&gt;"/>
+                        
                         <HBox id="cardContainer" class="sc-container">
                             
                             <core:HTML 

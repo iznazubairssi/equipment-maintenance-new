@@ -5,6 +5,7 @@ namespace d4iot;
 /**
  * Equipment entity
  */
+ @draft.enabled
 entity Equipments : managed {
     key EQUIPMENT            : String(18);
     EQNAME                   : String(40);
