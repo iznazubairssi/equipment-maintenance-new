@@ -1,6 +1,7 @@
 EQUIPMENT,EQNAME,EQDESC,EQSTATUS,INACTIVE,EQUNR_SAP,STATUSMANACTIVE,STATUSSTRUCTURE,STATUSLOGIC,ALARMMANACTIVE,ALARM2STATUS,ALARMSTRUCTURE,PDATAMANACTIVE,PDATASTRUCTURE,OTACTIVE,OTDAEMON,OTTYPE,LINK,LINKTEXT,EQTYPE_EQTYPE
 FILLING-GROUP,FILLING MACHINES,Filling machine group,1,,GRP001,false,,,false,false,,false,,false,,,http://example.com,Group Link,MG
 LINIE01-GROUP,LINIE JG01,Production line JG01,1,,GRP002,false,,,false,false,,false,,false,,,http://example.com,Group Link,MG
+SUBGROUP-A,SubGroup A,Sub assembly group A,1,,SUBGRP001,false,,,false,false,,false,,false,,,http://example.com,SubGroup Link,MG
 FILLING-01,Filling Machine 1,Automatic filling machine 1,1,,EQUIP001,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-FILL,TYPE_1,http://example.com,Machine Link,MA
 FILLING-02,Filling Machine 2,Automatic filling machine 2,1,,EQUIP002,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-FILL,TYPE_1,http://example.com,Machine Link,MA
 FILLING-03,Filling Machine 3,Automatic filling machine 3,1,,EQUIP003,true,STATUS_TAB_01,LOGIC_1,true,false,ALARM_TAB_01,true,PDATA_TAB_01,true,DAEMON-FILL,TYPE_1,http://example.com,Machine Link,MA

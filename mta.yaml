@@ -23,7 +23,7 @@ modules:
         properties:
           url: '${default-url}'
     requires:
-      - name: db  # ← THIS IS CRITICAL
+      - name: db
 
   - name: equipment-maintenance-approuter
     type: approuter.nodejs
@@ -42,3 +42,4 @@ resources:
     type: org.cloudfoundry.existing-service
     parameters:
       service-name: Postgres-DB
+      

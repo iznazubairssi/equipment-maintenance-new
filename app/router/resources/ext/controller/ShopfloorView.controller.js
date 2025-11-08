@@ -11,25 +11,28 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("equipment.app.fiori.ext.controller.ShopfloorView", {
+
         onInit: function () {
             var oViewModel = new JSONModel({
                 selectedGroup: "ALL",
                 isLoading: false,
-                lastRefresh: new Date()
+                lastRefresh: new Date(),
+                currentSubGroup: null,
+                currentSubGroupName: null,
+                parentGroupName: "ALL EQUIPMENT",
+                breadcrumb: []
             });
             this.getView().setModel(oViewModel, "viewModel");
 
-            // Options model for auto-refresh settings
             var oOptionsModel = new JSONModel({
                 autoRefreshEnabled: true,
-                refreshInterval: 60 // Default 60 seconds
+                refreshInterval: 60
             });
             this.getView().setModel(oOptionsModel, "optionsModel");
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("ShopfloorViewRoute").attachPatternMatched(this._onRouteMatched, this);
 
-            // Global function for status pill selection
             window.selectStatus = function(event) {
                 var statusCode = event.currentTarget.getAttribute('data-status-code');
                 console.log("Status pill clicked:", statusCode);
@@ -53,40 +56,6 @@ sap.ui.define([
                     }
                 }
             };
-
-            // Attach card click handlers after rendering
-            this.getView().addEventDelegate({
-                onAfterRendering: function() {
-                    setTimeout(() => {
-                        this._attachCardClickHandlers();
-                    }, 500);
-                }.bind(this)
-            });
-        },
-
-        _attachCardClickHandlers: function() {
-            var that = this;
-            var cards = document.querySelectorAll('.sc-card-wrapper');
-            console.log("Attaching click handlers to", cards.length, "cards");
-            
-            cards.forEach(function(card, index) {
-                card.onclick = null;
-                card.style.cursor = 'pointer';
-                
-                card.onclick = function(event) {
-                    // Don't trigger if clicking action buttons
-                    if (event.target.closest('.sc-btn') || event.target.closest('button')) {
-                        console.log("Click on button - skipping card click");
-                        return;
-                    }
-                    
-                    console.log("Card clicked via DOM, index:", index);
-                    var aEquipments = that.getView().getModel("shopfloor").getProperty("/Equipments");
-                    if (aEquipments && aEquipments[index]) {
-                        that._openStatusDialog(aEquipments[index]);
-                    }
-                };
-            });
         },
 
         _onRouteMatched: function() {
@@ -130,7 +99,7 @@ sap.ui.define([
             if (bEnabled) {
                 this._refreshTimer = setInterval(() => {
                     this._loadEquipments();
-                }, iInterval * 1000); // Convert to milliseconds
+                }, iInterval * 1000);
                 console.log("Auto-refresh enabled: every", iInterval, "seconds");
             } else {
                 console.log("Auto-refresh disabled");
@@ -150,21 +119,38 @@ sap.ui.define([
             ]);
 
             oListBinding.requestContexts().then((aContexts) => {
-                var aGroups = [{ key: "ALL", text: "ALL EQUIPMENT" }];
+                var aAllGroups = aContexts.map(ctx => ctx.getObject());
                 
-                aContexts.forEach(oContext => {
-                    var oGroup = oContext.getObject();
-                    aGroups.push({
-                        key: oGroup.EQUIPMENT,
-                        text: oGroup.EQNAME || oGroup.EQUIPMENT,
-                        description: oGroup.EQDESC
+                var oHierBinding = oModel.bindList("/EquipmentHierarchies");
+                return oHierBinding.requestContexts().then((aHierContexts) => {
+                    var aHierarchies = aHierContexts.map(ctx => ctx.getObject());
+                    
+                    var aChildGroupIds = aHierarchies
+                        .filter(h => {
+                            var childEq = aAllGroups.find(g => g.EQUIPMENT === h.EQUIPMENT_SUB_EQUIPMENT);
+                            return childEq && childEq.EQTYPE_EQTYPE === "MG";
+                        })
+                        .map(h => h.EQUIPMENT_SUB_EQUIPMENT);
+                    
+                    var aTopLevelGroups = aAllGroups.filter(g => 
+                        !aChildGroupIds.includes(g.EQUIPMENT)
+                    );
+                    
+                    var aGroups = [{ key: "ALL", text: "ALL EQUIPMENT" }];
+                    
+                    aTopLevelGroups.forEach(oGroup => {
+                        aGroups.push({
+                            key: oGroup.EQUIPMENT,
+                            text: oGroup.EQNAME || oGroup.EQUIPMENT,
+                            description: oGroup.EQDESC
+                        });
                     });
-                });
 
-                var oGroupModel = new JSONModel({ Groups: aGroups });
-                this.getView().setModel(oGroupModel, "groups");
-                
-                oViewModel.setProperty("/isLoading", false);
+                    var oGroupModel = new JSONModel({ Groups: aGroups });
+                    this.getView().setModel(oGroupModel, "groups");
+                    
+                    oViewModel.setProperty("/isLoading", false);
+                });
             }).catch((oError) => {
                 MessageToast.show("Error loading equipment groups");
                 console.error("Error loading groups:", oError);
@@ -183,19 +169,27 @@ sap.ui.define([
 
             var oViewModel = this.getView().getModel("viewModel");
             var sSelectedGroup = oViewModel.getProperty("/selectedGroup");
+            var sCurrentSubGroup = oViewModel.getProperty("/currentSubGroup");
 
             oViewModel.setProperty("/isLoading", true);
 
             var oListBinding = oModel.bindList("/Equipments", undefined, undefined, [
-                new Filter("EQTYPE_EQTYPE", FilterOperator.EQ, "MA"),
                 new Filter("INACTIVE", FilterOperator.NE, "X")
             ], {
                 $expand: "EQTYPE"
             });
 
             oListBinding.requestContexts().then((aContexts) => {
-                var aEquipments = aContexts.map(oContext => oContext.getObject());
-                this._processEquipmentData(aEquipments, sSelectedGroup);
+                var aAllEquipments = aContexts.map(oContext => oContext.getObject());
+                
+                var sActiveGroup = sCurrentSubGroup || sSelectedGroup;
+                
+                if (sActiveGroup === "ALL") {
+                    var aEquipments = aAllEquipments.filter(eq => eq.EQTYPE_EQTYPE === "MA");
+                    this._processEquipmentData(aEquipments, sActiveGroup);
+                } else {
+                    this._filterEquipmentsByGroup(aAllEquipments, sActiveGroup);
+                }
             }).catch((oError) => {
                 MessageToast.show("Error loading equipments");
                 console.error("Error loading equipments:", oError);
@@ -207,14 +201,10 @@ sap.ui.define([
         },
 
         _processEquipmentData: function(aEquipments, sSelectedGroup) {
-            if (sSelectedGroup !== "ALL") {
-                this._filterEquipmentsByGroup(aEquipments, sSelectedGroup);
-            } else {
-                this._enrichEquipmentData(aEquipments);
-            }
+            this._enrichEquipmentData(aEquipments);
         },
 
-        _filterEquipmentsByGroup: function(aEquipments, sGroupId) {
+        _filterEquipmentsByGroup: function(aAllEquipments, sGroupId) {
             var oModel = this.getView().getModel();
             if (!oModel) return;
 
@@ -227,23 +217,54 @@ sap.ui.define([
             oListBinding.requestContexts().then((aContexts) => {
                 var aHierarchies = aContexts.map(oContext => oContext.getObject());
                 var aChildEquipmentIds = aHierarchies.map(h => h.EQUIPMENT_SUB_EQUIPMENT);
-                var aFilteredEquipments = aEquipments.filter(eq => 
-                    aChildEquipmentIds.includes(eq.EQUIPMENT)
-                );
+                
+                var aMAChildren = [];
+                var aMGChildren = [];
+                
+                aChildEquipmentIds.forEach(childId => {
+                    var oEquipment = aAllEquipments.find(eq => eq.EQUIPMENT === childId);
+                    if (oEquipment) {
+                        if (oEquipment.EQTYPE_EQTYPE === "MA") {
+                            aMAChildren.push(oEquipment);
+                        } else if (oEquipment.EQTYPE_EQTYPE === "MG") {
+                            aMGChildren.push(oEquipment);
+                        }
+                    }
+                });
                 
                 var mOrderMap = {};
                 aHierarchies.forEach(h => {
                     mOrderMap[h.EQUIPMENT_SUB_EQUIPMENT] = h.OrderNo || 999;
                 });
                 
-                aFilteredEquipments.sort((a, b) => {
+                aMAChildren.sort((a, b) => {
                     return (mOrderMap[a.EQUIPMENT] || 999) - (mOrderMap[b.EQUIPMENT] || 999);
                 });
-
-                this._enrichEquipmentData(aFilteredEquipments);
+                
+                aMGChildren.sort((a, b) => {
+                    return (mOrderMap[a.EQUIPMENT] || 999) - (mOrderMap[b.EQUIPMENT] || 999);
+                });
+                
+                var aSubGroupCards = aMGChildren.map(sg => ({
+                    EquipmentID: sg.EQUIPMENT,
+                    EquipmentName: sg.EQNAME || sg.EQUIPMENT,
+                    Description: sg.EQDESC || "",
+                    IsSubGroup: true,
+                    Driver: "SubGroup",
+                    Status: "MG",
+                    StatusDesc: "Machine Group",
+                    StatusType: "SETUP",
+                    StatusClass: "sc-type-subgroup",
+                    ColorHex: "#B8B8B8",
+                    LastChange: new Date()
+                }));
+                
+                var aCombinedEquipments = [...aSubGroupCards, ...aMAChildren];
+                
+                this._enrichEquipmentData(aCombinedEquipments);
             }).catch((oError) => {
                 console.error("Error loading hierarchies:", oError);
-                this._enrichEquipmentData(aEquipments);
+                this._enrichEquipmentData([]);
             });
         },
 
@@ -252,6 +273,16 @@ sap.ui.define([
             var oViewModel = this.getView().getModel("viewModel");
 
             if (!oModel) return;
+
+            var aSubGroups = aEquipments.filter(eq => eq.IsSubGroup);
+            var aActualEquipments = aEquipments.filter(eq => !eq.IsSubGroup);
+
+            if (aActualEquipments.length === 0) {
+                var oEquipmentModel = new JSONModel({ Equipments: aSubGroups });
+                this.getView().setModel(oEquipmentModel, "shopfloor");
+                oViewModel.setProperty("/isLoading", false);
+                return;
+            }
 
             var oStatusTypesBinding = oModel.bindList("/StatusTypes");
             
@@ -312,7 +343,7 @@ sap.ui.define([
                     return mStatusMap;
                 });
             }).then((mStatusMap) => {
-                var aEnrichedEquipments = aEquipments.map(eq => {
+                var aEnrichedEquipments = aActualEquipments.map(eq => {
                     var oStatus = mStatusMap[eq.EQUIPMENT] || {
                         status: "I1",
                         statusDesc: "Unknown",
@@ -336,23 +367,24 @@ sap.ui.define([
                         SAPEquipment: eq.EQUNR_SAP || "",
                         StatusStructure: eq.STATUSSTRUCTURE || "",
                         AlarmStructure: eq.ALARMSTRUCTURE || "",
-                        PDataStructure: eq.PDATASTRUCTURE || ""
+                        PDataStructure: eq.PDATASTRUCTURE || "",
+                        IsSubGroup: false
                     };
                 });
 
-                var oEquipmentModel = new JSONModel({ Equipments: aEnrichedEquipments });
+                var aFinalEquipments = [...aSubGroups, ...aEnrichedEquipments];
+
+                var oEquipmentModel = new JSONModel({ Equipments: aFinalEquipments });
                 this.getView().setModel(oEquipmentModel, "shopfloor");
                 
                 oViewModel.setProperty("/isLoading", false);
                 oViewModel.setProperty("/lastRefresh", new Date());
+                console.log("Equipment model set. Button clicks will now work.");
 
-                setTimeout(() => {
-                    this._attachCardClickHandlers();
-                }, 200);
             }).catch((oError) => {
                 console.error("Error loading equipment status:", oError);
                 
-                var aBasicEquipments = aEquipments.map(eq => ({
+                var aBasicEquipments = aActualEquipments.map(eq => ({
                     EquipmentID: eq.EQUIPMENT,
                     Description: eq.EQDESC || eq.EQNAME || "",
                     EquipmentName: eq.EQNAME || eq.EQUIPMENT,
@@ -363,10 +395,13 @@ sap.ui.define([
                     LastChange: new Date(),
                     StatusStructure: eq.STATUSSTRUCTURE || "",
                     AlarmStructure: eq.ALARMSTRUCTURE || "",
-                    PDataStructure: eq.PDATASTRUCTURE || ""
+                    PDataStructure: eq.PDATASTRUCTURE || "",
+                    IsSubGroup: false
                 }));
 
-                var oEquipmentModel = new JSONModel({ Equipments: aBasicEquipments });
+                var aFinalEqui = [...aSubGroups, ...aBasicEquipments];
+
+                var oEquipmentModel = new JSONModel({ Equipments: aFinalEqui });
                 this.getView().setModel(oEquipmentModel, "shopfloor");
                 
                 oViewModel.setProperty("/isLoading", false);
@@ -385,6 +420,54 @@ sap.ui.define([
             };
             
             return mStatusClassMap[sStatusType] || "sc-type-idle";
+        },
+
+        _navigateToSubGroup: function(oSubGroup) {
+            var oViewModel = this.getView().getModel("viewModel");
+            var sParentGroup = oViewModel.getProperty("/selectedGroup");
+            
+            var sParentGroupName = this._getGroupName(sParentGroup);
+            
+            oViewModel.setProperty("/currentSubGroup", oSubGroup.EquipmentID);
+            oViewModel.setProperty("/currentSubGroupName", oSubGroup.EquipmentName);
+            oViewModel.setProperty("/parentGroupName", sParentGroupName);
+            
+            MessageToast.show("Opening sub-group: " + oSubGroup.EquipmentName);
+            this._loadEquipments();
+        },
+
+        _getGroupName: function(sGroupId) {
+            if (sGroupId === "ALL") return "ALL EQUIPMENT";
+            
+            var oGroupModel = this.getView().getModel("groups");
+            var aGroups = oGroupModel.getProperty("/Groups");
+            var oGroup = aGroups.find(g => g.key === sGroupId);
+            
+            return oGroup ? oGroup.text : sGroupId;
+        },
+
+        onGroupSelect: function(oEvent) {
+            var sKey = oEvent.getParameter("key");
+            var oViewModel = this.getView().getModel("viewModel");
+            
+            oViewModel.setProperty("/selectedGroup", sKey);
+            oViewModel.setProperty("/currentSubGroup", null);
+            oViewModel.setProperty("/currentSubGroupName", null);
+            oViewModel.setProperty("/parentGroupName", this._getGroupName(sKey));
+            oViewModel.setProperty("/breadcrumb", []);
+            
+            MessageToast.show("Loading group: " + sKey);
+            this._loadEquipments();
+        },
+
+        onBreadcrumbPress: function(oEvent) {
+            var oViewModel = this.getView().getModel("viewModel");
+            
+            oViewModel.setProperty("/currentSubGroup", null);
+            oViewModel.setProperty("/currentSubGroupName", null);
+            oViewModel.setProperty("/breadcrumb", []);
+            
+            this._loadEquipments();
         },
 
         formatDate: function(oDate) {
@@ -419,7 +502,7 @@ sap.ui.define([
         },
 
         onSaveOptions: function() {
-            this._setupAutoRefresh(); // Restart timer with new settings
+            this._setupAutoRefresh();
             MessageToast.show("Options saved successfully");
             this.onCloseOptionsDialog();
         },
@@ -439,45 +522,63 @@ sap.ui.define([
                 "This view displays equipment grouped by machine groups.\n\n" +
                 "Features:\n" +
                 "- Group tabs to filter equipment\n" +
+                "- Nested sub-groups with special cards\n" +
                 "- Color-coded status indicators\n" +
                 "- Click equipment cards to change status\n" +
-                "- Auto-refresh every 30 seconds\n\n" +
+                "- Click sub-group cards to view contents\n" +
+                "- Auto-refresh capability\n\n" +
                 "Status Colors:\n" +
-                "🟢 Green: Productive\n" +
-                "🟡 Yellow: Idle\n" +
-                "🔴 Red: Down/Problem\n" +
-                "🔵 Blue: Engineering/Setup\n" +
-                "🟤 Dark Red: Maintenance",
+                "Green: Productive\n" +
+                "Yellow: Idle\n" +
+                "Red: Down/Problem\n" +
+                "Blue: Engineering/Setup\n" +
+                "Dark Red: Maintenance\n" +
+                "Gray: Sub-Group",
                 { title: "Documentation" }
             );
         },
 
-        onGroupSelect: function(oEvent) {
-            var sKey = oEvent.getParameter("key");
-            var oViewModel = this.getView().getModel("viewModel");
-            
-            oViewModel.setProperty("/selectedGroup", sKey);
-            MessageToast.show("Loading group: " + sKey);
-            
-            this._loadEquipments();
-        },
-
-        onPressCardAction: function(oEvent) {
-            var sAction = oEvent.getSource().data("actionType");
-            var oSource = oEvent.getSource();
-            
-            // Find parent card wrapper
-            var oParent = oSource.getParent();
-            while (oParent && !oParent.hasStyleClass('sc-card-wrapper')) {
-                oParent = oParent.getParent();
+        // +++ ADDED THIS NEW FUNCTION +++
+        onPressOpenCard: function(oEvent) {
+            // Stop the event from bubbling
+            oEvent.cancelBubble = true;
+            if (oEvent.stopPropagation) {
+                oEvent.stopPropagation();
             }
-            
-            if (!oParent) {
-                console.error("Could not find card wrapper");
+
+            var oBindingContext = oEvent.getSource().getBindingContext("shopfloor");
+            if (!oBindingContext) {
+                console.error("onPressOpenCard: No binding context found");
                 return;
             }
+
+            var oEquipment = oBindingContext.getObject();
+            if (!oEquipment) {
+                console.error("onPressOpenCard: Could not get equipment object");
+                return;
+            }
+
+            if (oEquipment.IsSubGroup) {
+                console.log("Opening subgroup:", oEquipment.EquipmentID);
+                this._navigateToSubGroup(oEquipment);
+            } else {
+                console.log("Opening status dialog for:", oEquipment.EquipmentID);
+                this._openStatusDialog(oEquipment);
+            }
+        },
+        // +++ END ADD +++
+
+        onPressCardAction: function(oEvent) {
+            // This function is for the OTHER buttons (Status, Alarm, Proc.Data)
+            // It is correct.
+            oEvent.cancelBubble = true;
+            if (oEvent.stopPropagation) {
+                oEvent.stopPropagation();
+            }
             
-            var oBindingContext = oParent.getBindingContext("shopfloor");
+            var sAction = oEvent.getSource().data("actionType");
+            var oBindingContext = oEvent.getSource().getBindingContext("shopfloor");
+            
             if (!oBindingContext) {
                 console.error("No binding context found");
                 return;
@@ -486,16 +587,10 @@ sap.ui.define([
             var oEquipment = oBindingContext.getObject();
             var sEquipmentId = oEquipment.EquipmentID;
 
-            if (oEvent.cancelBubble) {
-                oEvent.cancelBubble = true;
-            }
-            if (oEvent.stopPropagation) {
-                oEvent.stopPropagation();
-            }
+            console.log("Action button pressed:", sAction, "for", sEquipmentId);
 
             switch(sAction) {
                 case "Status":
-                    // Show current status details
                     this._showStatusDetails(oEquipment);
                     break;
                 case "Alarm":
@@ -520,14 +615,17 @@ sap.ui.define([
         },
 
         _openStatusDialog: function(oEquipment) {
+            console.log("=== _openStatusDialog called for:", oEquipment.EquipmentID);
+            
             var oModel = this.getView().getModel();
             
             if (!oModel) {
+                console.error("Model not available");
                 MessageToast.show("Service not available");
                 return;
             }
 
-            console.log("Opening status dialog for:", oEquipment.EquipmentID);
+            console.log("Loading status types and statuses...");
 
             var oStatusTypesBinding = oModel.bindList("/StatusTypes");
             oStatusTypesBinding.requestContexts().then((aStatusTypeContexts) => {
@@ -560,15 +658,18 @@ sap.ui.define([
                         availableStatuses: aStatuses
                     });
 
+                    console.log("Setting dialog model with", aStatuses.length, "statuses");
                     this.getView().setModel(oDialogModel, "statusDialog");
 
                     if (!this._statusDialog) {
                         this._statusDialog = this.byId("statusDialog");
+                        console.log("Getting dialog control, found:", !!this._statusDialog);
                     }
                     
                     if (this._statusDialog) {
+                        console.log("Opening dialog...");
                         this._statusDialog.open();
-                        console.log("Dialog opened");
+                        console.log("Dialog open() called");
                     } else {
                         console.error("Dialog control not found with ID: statusDialog");
                         MessageToast.show("Error: Dialog not found");
@@ -599,10 +700,9 @@ sap.ui.define([
             var oModel = this.getView().getModel();
             var sNow = new Date().toISOString();
 
-            // First, get the last status record to calculate LENGTHMSEC
             var oHistoryBinding = oModel.bindList("/StatusHistory");
             var aFilters = [new Filter("EQUIPMENT_EQUIPMENT", FilterOperator.EQ, sEquipmentId)];
-            var aSorters = [new Sorter("TIME", true)]; // Descending order
+            var aSorters = [new Sorter("TIME", true)];
             
             oHistoryBinding.filter(aFilters);
             oHistoryBinding.sort(aSorters);
@@ -611,7 +711,6 @@ sap.ui.define([
                 var iLengthMsec = 0;
                 
                 if (aContexts.length > 0) {
-                    // Calculate time difference with previous record
                     var oLastRecord = aContexts[0].getObject();
                     var lastTime = new Date(oLastRecord.TIME);
                     var currentTime = new Date(sNow);
@@ -622,7 +721,6 @@ sap.ui.define([
                     console.log("Duration (ms):", iLengthMsec);
                 }
 
-                // Create new status history entry with calculated LENGTHMSEC
                 var oHistoryEntry = {
                     EQUIPMENT_EQUIPMENT: sEquipmentId,
                     TIME: sNow,
@@ -638,7 +736,6 @@ sap.ui.define([
 
                 return oHistoryContext.created();
             }).then(() => {
-                // Update current status
                 var oStatusBinding = oModel.bindList("/EquipmentStatus");
                 oStatusBinding.filter(new Filter("EQUIPMENT_EQUIPMENT", FilterOperator.EQ, sEquipmentId));
                 

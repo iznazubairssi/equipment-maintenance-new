@@ -2,6 +2,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:f="sap.f"
+    xmlns:l="sap.ui.layout"
     xmlns:core="sap.ui.core"
     controllerName="equipment.app.fiori.ext.controller.ShopfloorView"
     displayBlock="true"
@@ -21,7 +22,7 @@
                     enabled="{= !${viewModel>/isLoading}}"/>
                 <Button 
                     id="btnFilter" 
-                    icon="sap-icon://filter" 
+                    icon="sap.ui.core.IconColor.sapUiHsv_117" 
                     tooltip="Filter Equipment Groups" 
                     press=".onPressFilter"/>
                 <Button 
@@ -38,13 +39,13 @@
         </customHeader>
 
         <content>
-            <!-- Equipment Groups Tabs -->
             <IconTabBar
                 id="iconTabBarGroups"
                 select=".onGroupSelect"
                 selectedKey="{viewModel>/selectedGroup}"
                 class="sapUiResponsiveContentPadding"
-                items="{groups>/Groups}">
+                items="{groups>/Groups}"
+                visible="{= !${viewModel>/currentSubGroup}}">
                 <items>
                     <IconTabFilter 
                         id="iconTabFilter"
@@ -53,13 +54,34 @@
                 </items>
             </IconTabBar>
 
-            <!-- Loading Indicator -->
+            <VBox 
+                id="breadcrumbBox"
+                visible="{= !!${viewModel>/currentSubGroup}}"
+                class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiMediumMarginBegin">
+                <HBox id="breadcrumbContainer" alignItems="Center">
+                    <Link 
+                        id="rootLink"
+                        text="{viewModel>/parentGroupName}"
+                        press=".onBreadcrumbPress">
+                        <customData>
+                            <core:CustomData key="groupId" value="root"/>
+                        </customData>
+                    </Link>
+                    
+                    <core:HTML id="separator" content="&lt;span style='margin: 0 8px; color: #666;'&gt;&amp;gt;&lt;/span&gt;"/>
+                    
+                    <Text 
+                        id="currentSubGroupText"
+                        text="{viewModel>/currentSubGroupName}"
+                        wrapping="false"/>
+                </HBox>
+            </VBox>
+
             <BusyIndicator 
                 id="busyIndicator"
                 visible="{viewModel>/isLoading}" 
                 class="sapUiMediumMargin"/>
 
-            <!-- Equipment Grid -->
             <f:GridContainer
                 id="gridContainerEquipment"
                 visible="{= !${viewModel>/isLoading}}"
@@ -68,22 +90,19 @@
                 <f:layout>
                     <f:GridContainerSettings 
                         id="gridSettings"
-                        rowSize="150px" 
-                        columnSize="400px" 
+                        rowSize="185px" columnSize="400px" 
                         gap="1rem" />
                 </f:layout>
                 <f:items>
                     
-                    <!-- Wrapper VBox for each card - click handled via DOM -->
-                    <VBox id="cardWrapper" class="sc-card-wrapper">
+                    <VBox id="cardWrapper" class="sc-card-wrapper {= ${shopfloor>IsSubGroup} ? 'sc-subgroup-card' : ''}">
+                        
                         <HBox id="cardContainer" class="sc-container">
                             
-                            <!-- Left Status Circle Area with color -->
                             <core:HTML 
                                 id="leftAreaHtml"
                                 content="&lt;div class='sc-left-area' style='min-width: 70px; background-color: {shopfloor>ColorHex}; display: flex; justify-content: center; align-items: center; border-radius: 15px 0 0 15px;'&gt;&lt;div class='sc-state-circle' style='width: 50px; height: 50px; border-radius: 25px; background-color: rgba(238, 238, 238, 0.9); display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'&gt;&lt;span style='display: block; width: 100%; text-align: center; font-size: 1.5rem; font-weight: 700; color: black;'&gt;{shopfloor>Status}&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;"/>
 
-                            <!-- Middle Content Area -->
                             <VBox id="contentArea" class="sc-content">
                                 <Text 
                                     id="equipmentIdText"
@@ -95,20 +114,30 @@
                                     class="sc-content-description" />
                                 
                                 <VBox id="driverBox" class="sapUiTinyMarginTop sc-driver-spacer">
-                                    <Label id="driverLabel" text="Driver: {shopfloor>Driver}" class="sc-content-small-text"/>
+                                    <Label 
+                                        id="driverLabel" 
+                                        text="{= ${shopfloor>IsSubGroup} ? 'Type: Machine Group' : 'Driver: ' + ${shopfloor>Driver}}" 
+                                        class="sc-content-small-text"/>
                                 </VBox>
 
                                 <Text 
                                     id="lastChangeText"
-                                    text="{
-                                        path: 'shopfloor>LastChange',
-                                        formatter: '.formatDate'
-                                    }" 
+                                    text="{= ${shopfloor>IsSubGroup} ? 'Click to expand' : ${path: 'shopfloor>LastChange', formatter: '.formatDate'}}" 
                                     class="sc-content-footer" />
                             </VBox>
 
-                            <!-- Right Action Area -->
-                            <VBox id="actionArea" class="sc-right">
+                            <VBox 
+                                id="actionArea" 
+                                class="sc-right"
+                                visible="{= !${shopfloor>IsSubGroup}}">
+                                
+                                <Button 
+                                    id="btnOpenEquipment"
+                                    text="Open" 
+                                    type="Emphasized"
+                                    class="sc-btn" 
+                                    press=".onPressOpenCard"/>
+                                    
                                 <Button 
                                     id="btnStatus"
                                     text="Status" 
@@ -147,13 +176,28 @@
                                 </Button>
                             </VBox>
 
+                            <VBox 
+                                id="subgroupIndicator"
+                                class="sc-right"
+                                visible="{= ${shopfloor>IsSubGroup}}"
+                                justifyContent="Center"
+                                alignItems="Center">
+                                
+                                <Button 
+                                    id="btnOpenSubgroup"
+                                    text="Open" 
+                                    type="Emphasized"
+                                    class="sc-btn" 
+                                    press=".onPressOpenCard"/>
+
+                            </VBox>
+
                         </HBox>
                     </VBox>
                     
                 </f:items>
             </f:GridContainer>
 
-            <!-- Empty State Message -->
             <VBox 
                 id="emptyState"
                 alignItems="Center" 
@@ -173,7 +217,6 @@
         </content>
     </Page>
 
-    <!-- Status Change Dialog -->
     <Dialog
         id="statusDialog"
         title="Change Equipment Status: {statusDialog>/equipmentName}"
@@ -212,7 +255,6 @@
         </endButton>
     </Dialog>
 
-    <!-- Options Dialog -->
     <Dialog
         id="optionsDialog"
         title="Shopfloor Options"

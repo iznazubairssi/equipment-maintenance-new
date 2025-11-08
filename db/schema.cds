@@ -29,8 +29,8 @@ entity Equipments : managed {
     EQTYPE                   : Association to EquipmentTypes on EQTYPE.EQTYPE = EQTYPE_EQTYPE;
 }
 
-/**
- * Existing EquipmentTypes entity
+/*
+ * EquipmentTypes entity
  */
 entity EquipmentTypes {
     key EQTYPE                   : String(2);
@@ -39,21 +39,9 @@ entity EquipmentTypes {
     EQTYPE_STATUS_CAPABLE    : Boolean;
 }
 
-/**
- * 
- * Table of status types (PROD, IDLE, DOWN, etc.)
- * Includes color definitions 
- */
-entity StatusTypes : managed {
-    key STATUSTYPE     : String(5);
-    STATUSTYPEDESC : String(40);
-    COLORHEX       : String(7); // For HEX-Codes
-}
-
-/**
+/*
  * 
  * Table of possible statuses (P1, R1, M1, etc.)
- * Links to a StatusType 
  */
 entity Status : managed {
     key STATUS     : String(4);
@@ -63,16 +51,25 @@ entity Status : managed {
 
 /**
  * 
- * Equipment-Group Hierarchies
+ * Table of status types (PROD, IDLE, DOWN, etc.)
  */
-entity EquipmentHierarchies : managed {
-    key EQUIPMENT     : Association to Equipments; // Parent Group
-    key EQUIPMENT_SUB : Association to Equipments; // Child Equipment/Group
-    OrderNo       : Integer; // 
+entity StatusTypes : managed {
+    key STATUSTYPE     : String(5);
+    STATUSTYPEDESC : String(40);
+    COLORHEX       : String(7);
 }
 
 /**
  * 
+ * Equipment-Group Hierarchies
+ */
+entity EquipmentHierarchies : managed {
+    key EQUIPMENT     : Association to Equipments;
+    key EQUIPMENT_SUB : Association to Equipments;
+    OrderNo       : Integer;
+}
+
+/*
  * Current Equipment-Status
  */
 entity EquipmentStatus : managed {
@@ -81,7 +78,7 @@ entity EquipmentStatus : managed {
     LASTSTATUSCHANGE : Timestamp;
 }
 
-/**
+/*
  * 
  * Equipment-Status History
  */
@@ -96,5 +93,5 @@ entity StatusHistory : managed {
     IGNORERECORD   : String(1);
     LASTCHANGE     : Timestamp;
     LASTSTATUS     : String(4);
-    LENGTHMSEC     : Integer64; // 
+    LENGTHMSEC     : Integer64;
 }

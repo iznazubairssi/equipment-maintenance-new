@@ -6,7 +6,6 @@ module.exports = class EquipmentService extends cds.ApplicationService {
     async init() {
         console.log('🔧 Starting Equipment Service...');
 
-        // Get all entities from the service definition
         const { 
             Equipments, 
             StatusTypes, 
@@ -28,7 +27,6 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             StatusHistory
         ];
 
-        // Managed fields handling
         this.before(['CREATE', 'UPDATE'], managedEntities, (req) => {
             const user = req.user.id || 'anonymous';
             
@@ -40,7 +38,6 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             }
         });
 
-        // Equipment ID uppercase conversion
         this.before('CREATE', 'Equipments', (req) => {
             if (req.data.EQUIPMENT) {
                 req.data.EQUIPMENT = req.data.EQUIPMENT.toUpperCase();
@@ -48,22 +45,18 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             }
         });
 
-        // Status History automatic length calculation
         this.before('CREATE', 'StatusHistory', async (req) => {
             if (req.data.EQUIPMENT_EQUIPMENT) {
-                // Get the previous status for this equipment
                 const previousStatus = await SELECT.one
                     .from(StatusHistory)
                     .where({ EQUIPMENT_EQUIPMENT: req.data.EQUIPMENT_EQUIPMENT })
                     .orderBy({ TIME: 'desc' });
 
                 if (previousStatus && req.data.TIME) {
-                    // Calculate duration in milliseconds
                     const prevTime = new Date(previousStatus.TIME).getTime();
                     const currTime = new Date(req.data.TIME).getTime();
                     previousStatus.LENGTHMSEC = currTime - prevTime;
 
-                    // Update the previous record
                     await UPDATE(StatusHistory)
                         .where({ 
                             EQUIPMENT_EQUIPMENT: previousStatus.EQUIPMENT_EQUIPMENT,
@@ -74,11 +67,9 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             }
         });
 
-        // When creating a status history, also update current equipment status
         this.after('CREATE', 'StatusHistory', async (data, req) => {
             const { EQUIPMENT_EQUIPMENT, STATUS_STATUS, TIME } = data;
             
-            // Update or create current status
             const existing = await SELECT.one
                 .from(EquipmentStatus)
                 .where({ EQUIPMENT_EQUIPMENT });
@@ -99,7 +90,6 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             }
         });
 
-        // Equipment activation/deactivation actions
         this.on('activateEquipment', async (req) => {
             const { EQUIPMENT } = req.data;
             await UPDATE(Equipments).where({ EQUIPMENT })
@@ -122,7 +112,6 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             console.log('🔗 Connecting to PostgreSQL...');
             const db = await cds.connect.to('db');
             
-            // Test connection
             await db.run('SELECT 1 as test');
             console.log('✅ Database connection test passed');
             
@@ -141,13 +130,11 @@ module.exports = class EquipmentService extends cds.ApplicationService {
                 )
             `);
             
-            // Check if *any* of the core tables are missing
             if (tables.length < 7) {
                 console.log('🔄 Deploying database schema to PostgreSQL...');
                 await cds.deploy('./gen/db').to('db');
                 console.log('✅ Database schema deployed successfully');
                 
-                // Initialize master data
                 await initializeStatusData(db);
             } else {
                 console.log('✅ Database tables already exist:', tables.map(t => t.table_name));

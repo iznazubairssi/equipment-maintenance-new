@@ -1,7 +1,8 @@
 /* Global Variables */
 :root {
-    --sc-container-height: 150px;
+    --sc-container-height: 185px;
     --sc-content-color: #eee;
+    --sc-subgroup-color: #d0d0d0;
 }
 
 /* --- Page Title --- */
@@ -21,6 +22,26 @@
     width: 100% !important;
 }
 
+/* --- Breadcrumb Navigation --- */
+#breadcrumbBox {
+    background-color: #f7f7f7;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border-left: 4px solid #0070f2;
+    margin-bottom: 0.5rem !important;
+}
+
+#breadcrumbContainer .sapMLnk {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+#currentSubGroupText {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0070f2;
+}
+
 /* --- Status Color Definitions --- */
 .sc-type-prod { --sc-state-color: #008000; }
 .sc-type-prod2 { --sc-state-color: #90EE90; }
@@ -29,10 +50,12 @@
 .sc-type-maint { --sc-state-color: #8B0000; }
 .sc-type-eng { --sc-state-color: #0000FF; }
 .sc-type-setup { --sc-state-color: #ADD8E6; }
+.sc-type-subgroup { --sc-state-color: #B8B8B8; }
 
 /* --- Card Container --- */
 .sc-card-wrapper {
-    cursor: pointer;
+    cursor: default;
+    position: relative; 
 }
 
 .sc-container {
@@ -53,6 +76,31 @@
 
 .sc-card-wrapper:active .sc-container {
     transform: translateY(0);
+}
+
+/* --- SubGroup Card Styling --- */
+.sc-subgroup-card .sc-container {
+    background: linear-gradient(135deg, #d0d0d0 0%, #e8e8e8 100%);
+    border: 2px dashed #999;
+}
+
+.sc-subgroup-card:hover .sc-container {
+    border-color: #666;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.sc-subgroup-card .sc-left-area {
+    background-color: var(--sc-subgroup-color) !important;
+}
+
+.sc-subgroup-card .sc-content {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.sc-subgroup-card .sc-content-footer {
+    color: #0070f2 !important;
+    font-style: italic;
 }
 
 .sc-driver-spacer {
@@ -134,12 +182,14 @@
     width: 100px;
     background-color: var(--sc-content-color);
     border-radius: 0 15px 0 0;
-    padding-top: 15px;
+    padding-top: 8px;
     padding-left: 5px;
     margin-bottom: 17px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
+    position: relative;
+    z-index: 10;
 }
 
 .sc-btn {
@@ -160,6 +210,15 @@
     min-width: 85px;
 }
 
+/* Style for the 'Open' button */
+.sc-btn.sapMBtnEmphasized .sapMBtnInner {
+     background-color: #0070f2;
+}
+.sc-btn.sapMBtnEmphasized:hover .sapMBtnInner {
+     background-color: #005bb0;
+}
+
+
 .sc-btn:hover .sapMBtnInner {
     background-color: #666;
 }
@@ -168,6 +227,19 @@
     background-color: #ccc;
     color: #999;
     cursor: not-allowed;
+}
+
+/* --- SubGroup Indicator --- */
+.sc-subgroup-card .sc-right {
+    background-color: transparent !important;
+    justify-content: center;
+    align-items: center;
+    padding-top: 15px; 
+    gap: 5px;
+}
+
+#subgroupIndicator {
+    background-color: transparent;
 }
 
 /* --- Status Dialog Styling --- */
@@ -182,7 +254,7 @@
 .status-pill-container {
     transition: all 0.2s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 450px;
+    max-width: 650px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -206,6 +278,10 @@
     
     .shopfloor-page-title {
         font-size: 1.25rem !important;
+    }
+    
+    #breadcrumbBox {
+        padding: 8px 12px;
     }
 }
 
