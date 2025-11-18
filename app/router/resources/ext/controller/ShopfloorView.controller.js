@@ -33,6 +33,7 @@ sap.ui.define([
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("ShopfloorViewRoute").attachPatternMatched(this._onRouteMatched, this);
 
+            // This global function is still needed by your core:HTML in the dialog
             window.selectStatus = function(event) {
                 var statusCode = event.currentTarget.getAttribute('data-status-code');
                 console.log("Status pill clicked:", statusCode);
@@ -57,55 +58,24 @@ sap.ui.define([
                 }
             };
 
-            // Attach click handlers after rendering
-            this.getView().addEventDelegate({
-                onAfterRendering: function() {
-                    setTimeout(() => {
-                        this._attachCardClickHandlers();
-                    }, 200);
-                    setTimeout(() => {
-                        this._attachCardClickHandlers();
-                    }, 500);
-                }.bind(this)
-            });
+            // **************************************************
+            // * REMOVED THIS BLOCK              *
+            // **************************************************
+            //
+            // this.getView().addEventDelegate({
+            //    onAfterRendering: function() {
+            //        ...
+            //    }.bind(this)
+            // });
         },
 
-        _attachCardClickHandlers: function() {
-            var that = this;
-            
-            setTimeout(function() {
-                var overlays = document.querySelectorAll('.card-click-overlay');
-                console.log("Attaching handlers to", overlays.length, "overlays");
-                
-                overlays.forEach(function(overlay) {
-                    var equipmentId = overlay.getAttribute('data-equipment-id');
-                    var isSubGroup = overlay.getAttribute('data-is-subgroup') === 'true';
-                    
-                    overlay.onclick = function(event) {
-                        console.log("Card clicked:", equipmentId, "IsSubGroup:", isSubGroup);
-                        event.stopPropagation();
-                        
-                        try {
-                            var oShopfloorModel = that.getView().getModel("shopfloor");
-                            var aEquipments = oShopfloorModel.getProperty("/Equipments");
-                            var oEquipment = aEquipments.find(function(eq) {
-                                return eq.EquipmentID === equipmentId;
-                            });
-                            
-                            if (oEquipment) {
-                                if (oEquipment.IsSubGroup === true) {
-                                    that._navigateToSubGroup(oEquipment);
-                                } else {
-                                    that._openStatusDialog(oEquipment);
-                                }
-                            }
-                        } catch (error) {
-                            console.error("Click handler error:", error);
-                        }
-                    };
-                });
-            }, 100);
-        },
+        // **************************************************
+        // * REMOVED THIS ENTIRE FUNCTION        *
+        // **************************************************
+        //
+        // _attachCardClickHandlers: function() {
+        //     ...
+        // },
 
         _onRouteMatched: function() {
             var oModel = this.getView().getModel();
@@ -430,10 +400,8 @@ sap.ui.define([
                 oViewModel.setProperty("/lastRefresh", new Date());
                 console.log("Equipment model set. Button clicks will now work.");
                 
-                // Re-attach click handlers
-                setTimeout(() => {
-                    this._attachCardClickHandlers();
-                }, 200);
+                // REMOVED Re-attach click handlers call
+                
             }).catch((oError) => {
                 console.error("Error loading equipment status:", oError);
                 
@@ -591,9 +559,9 @@ sap.ui.define([
             );
         },
 
-        // +++ ADDED THIS NEW FUNCTION +++
+        // This function is now correctly wired to the CustomTile's 'press' event
         onPressOpenCard: function(oEvent) {
-            // Stop the event from bubbling
+            // Stop the event from bubbling (though on CustomTile, it's the root)
             oEvent.cancelBubble = true;
             if (oEvent.stopPropagation) {
                 oEvent.stopPropagation();
@@ -619,8 +587,8 @@ sap.ui.define([
                 this._openStatusDialog(oEquipment);
             }
         },
-        // +++ END ADD +++
 
+        // This function is correct. The stopPropagation is vital.
         onPressCardAction: function(oEvent) {
             // This function is for the OTHER buttons (Status, Alarm, Proc.Data)
             // It is correct.

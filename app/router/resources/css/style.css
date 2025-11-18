@@ -52,10 +52,24 @@
 .sc-type-setup { --sc-state-color: #ADD8E6; }
 .sc-type-subgroup { --sc-state-color: #B8B8B8; }
 
+/* --- Grid Container Spacing Fix --- */
+#gridContainerEquipment .sapMCustomListItem {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+#gridContainerEquipment .sapFGridContainerItemWrapper {
+    padding: 0 !important;
+}
+
 /* --- Card Container --- */
 .sc-card-wrapper {
     cursor: default;
-    position: relative; 
+    position: relative;
+    margin: 0;
+    height: 100%;
 }
 
 .sc-container {
@@ -217,7 +231,6 @@
 .sc-btn.sapMBtnEmphasized:hover .sapMBtnInner {
      background-color: #005bb0;
 }
-
 
 .sc-btn:hover .sapMBtnInner {
     background-color: #666;
