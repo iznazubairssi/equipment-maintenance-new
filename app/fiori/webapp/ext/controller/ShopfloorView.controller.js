@@ -33,7 +33,6 @@ sap.ui.define([
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("ShopfloorViewRoute").attachPatternMatched(this._onRouteMatched, this);
 
-            // This global function is still needed by your core:HTML in the dialog
             window.selectStatus = function(event) {
                 var statusCode = event.currentTarget.getAttribute('data-status-code');
                 console.log("Status pill clicked:", statusCode);
@@ -57,25 +56,7 @@ sap.ui.define([
                     }
                 }
             };
-
-            // **************************************************
-            // * REMOVED THIS BLOCK              *
-            // **************************************************
-            //
-            // this.getView().addEventDelegate({
-            //    onAfterRendering: function() {
-            //        ...
-            //    }.bind(this)
-            // });
         },
-
-        // **************************************************
-        // * REMOVED THIS ENTIRE FUNCTION        *
-        // **************************************************
-        //
-        // _attachCardClickHandlers: function() {
-        //     ...
-        // },
 
         _onRouteMatched: function() {
             var oModel = this.getView().getModel();
@@ -400,8 +381,6 @@ sap.ui.define([
                 oViewModel.setProperty("/lastRefresh", new Date());
                 console.log("Equipment model set. Button clicks will now work.");
                 
-                // REMOVED Re-attach click handlers call
-                
             }).catch((oError) => {
                 console.error("Error loading equipment status:", oError);
                 
@@ -559,9 +538,7 @@ sap.ui.define([
             );
         },
 
-        // This function is now correctly wired to the CustomTile's 'press' event
         onPressOpenCard: function(oEvent) {
-            // Stop the event from bubbling (though on CustomTile, it's the root)
             oEvent.cancelBubble = true;
             if (oEvent.stopPropagation) {
                 oEvent.stopPropagation();
@@ -588,10 +565,7 @@ sap.ui.define([
             }
         },
 
-        // This function is correct. The stopPropagation is vital.
         onPressCardAction: function(oEvent) {
-            // This function is for the OTHER buttons (Status, Alarm, Proc.Data)
-            // It is correct.
             oEvent.cancelBubble = true;
             if (oEvent.stopPropagation) {
                 oEvent.stopPropagation();
@@ -636,7 +610,6 @@ sap.ui.define([
         },
 
         _openStatusDialog: function(oEquipment) {
-            console.log("=== _openStatusDialog called for:", oEquipment.EquipmentID);
             
             var oModel = this.getView().getModel();
             
@@ -645,8 +618,6 @@ sap.ui.define([
                 MessageToast.show("Service not available");
                 return;
             }
-
-            console.log("Loading status types and statuses...");
 
             var oStatusTypesBinding = oModel.bindList("/StatusTypes");
             oStatusTypesBinding.requestContexts().then((aStatusTypeContexts) => {

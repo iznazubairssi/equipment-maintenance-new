@@ -5,7 +5,6 @@
     --sc-subgroup-color: #d0d0d0;
 }
 
-/* --- Page Title --- */
 .shopfloor-page-title {
     font-size: 1.5rem !important;
     font-weight: 600 !important;
@@ -22,7 +21,6 @@
     width: 100% !important;
 }
 
-/* --- Breadcrumb Navigation --- */
 #breadcrumbBox {
     background-color: #f7f7f7;
     padding: 12px 16px;
@@ -52,7 +50,6 @@
 .sc-type-setup { --sc-state-color: #ADD8E6; }
 .sc-type-subgroup { --sc-state-color: #B8B8B8; }
 
-/* --- Grid Container Spacing Fix --- */
 #gridContainerEquipment .sapMCustomListItem {
     margin: 0 !important;
     padding: 0 !important;
@@ -64,7 +61,6 @@
     padding: 0 !important;
 }
 
-/* --- Card Container --- */
 .sc-card-wrapper {
     cursor: default;
     position: relative;
@@ -92,7 +88,6 @@
     transform: translateY(0);
 }
 
-/* --- SubGroup Card Styling --- */
 .sc-subgroup-card .sc-container {
     background: linear-gradient(135deg, #d0d0d0 0%, #e8e8e8 100%);
     border: 2px dashed #999;
@@ -121,7 +116,6 @@
     flex-grow: 1;
 }
 
-/* --- Left Status Circle Area --- */
 .sc-left-area {
     min-width: 70px;
     display: flex;
@@ -145,7 +139,6 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* --- Middle Content Area --- */
 .sc-content {
     flex-grow: 1;
     background-color: var(--sc-content-color);
@@ -191,7 +184,6 @@
     margin-bottom: 4px;
 }
 
-/* --- Right Action Area --- */
 .sc-right {
     width: 100px;
     background-color: var(--sc-content-color);
@@ -224,7 +216,6 @@
     min-width: 85px;
 }
 
-/* Style for the 'Open' button */
 .sc-btn.sapMBtnEmphasized .sapMBtnInner {
      background-color: #0070f2;
 }

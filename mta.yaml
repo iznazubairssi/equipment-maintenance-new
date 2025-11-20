@@ -22,17 +22,16 @@ modules:
         properties:
           url: '${default-url}'
     requires:
-      - name: db # <-- This links to the Postgres-DB resource
+      - name: db
 
-  # --- THIS IS THE NEW MODULE YOU ASKED FOR ---
   - name: equipment-maintenance-db-deployer
     type: hdb
-    path: gen/pg # <-- This path must match your PostgreSQL build output
+    path: gen/pg
     parameters:
       buildpack: nodejs_buildpack
       memory: 256M
     requires:
-      - name: db # <-- This links to your 'resources: - name: db'
+      - name: db
 
   - name: equipment-maintenance-approuter
     type: nodejs
