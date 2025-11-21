@@ -215,8 +215,8 @@
         contentWidth="1100px"
         contentHeight="80%"
         resizable="true"
-        draggable="true">
-        <content>
+        draggable="true"
+        escapeHandler=".onCloseStatusDialog"> <content>
             <VBox id="dialogContent" class="sapUiMediumMargin">
                 <Label id="selectStatusLabel" text="Select Status:" class="sapUiSmallMarginBottom"/>
                 <ScrollContainer id="statusScroll" height="550px" vertical="true">
@@ -234,14 +234,6 @@
                 </ScrollContainer>
             </VBox>
         </content>
-        <beginButton>
-            <Button 
-                id="btnApplyStatus"
-                text="Apply" 
-                type="Emphasized" 
-                press=".onApplyStatus"
-                enabled="{= ${statusDialog>/selectedStatus} !== null}"/>
-        </beginButton>
         <endButton>
             <Button id="btnCancelStatus" text="Cancel" press=".onCloseStatusDialog"/>
         </endButton>

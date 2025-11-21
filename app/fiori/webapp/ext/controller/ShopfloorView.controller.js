@@ -39,8 +39,13 @@ sap.ui.define([
                 
                 var oView = sap.ui.getCore().byId("__component0---ShopfloorViewView");
                 if (oView) {
+                    var oController = oView.getController();
                     var oDialogModel = oView.getModel("statusDialog");
-                    if (oDialogModel) {
+                    
+                    if (oDialogModel && oController) {
+                        var sEquipmentId = oDialogModel.getProperty("/equipmentId");
+                        var sCurrentStatus = oDialogModel.getProperty("/currentStatus");
+
                         oDialogModel.setProperty("/selectedStatus", statusCode);
                         
                         var pills = document.querySelectorAll('.status-pill-container');
@@ -53,6 +58,13 @@ sap.ui.define([
                                 pill.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
                             }
                         });
+
+                        if (sEquipmentId) {
+                            oController._applyStatusUpdate(sEquipmentId, sCurrentStatus, statusCode);
+                        } else {
+                            console.error("Could not find Equipment ID in dialog model.");
+                            oController.onCloseStatusDialog();
+                        }
                     }
                 }
             };
@@ -673,25 +685,17 @@ sap.ui.define([
             });
         },
 
-        onApplyStatus: function() {
-            var oDialogModel = this.getView().getModel("statusDialog");
-            var sEquipmentId = oDialogModel.getProperty("/equipmentId");
-            var sNewStatus = oDialogModel.getProperty("/selectedStatus");
-            var sCurrentStatus = oDialogModel.getProperty("/currentStatus");
-
-            if (!sNewStatus) {
-                MessageToast.show("Please select a status");
-                return;
-            }
-
+        _applyStatusUpdate: function(sEquipmentId, sCurrentStatus, sNewStatus) {
+            
             if (sNewStatus === sCurrentStatus) {
                 MessageToast.show("Status is already set to " + sNewStatus);
+                this.onCloseStatusDialog();
                 return;
             }
 
             var oModel = this.getView().getModel();
             var sNow = new Date().toISOString();
-
+            
             var oHistoryBinding = oModel.bindList("/StatusHistory");
             var aFilters = [new Filter("EQUIPMENT_EQUIPMENT", FilterOperator.EQ, sEquipmentId)];
             var aSorters = [new Sorter("TIME", true)];
@@ -699,6 +703,8 @@ sap.ui.define([
             oHistoryBinding.filter(aFilters);
             oHistoryBinding.sort(aSorters);
             
+            var that = this; 
+
             oHistoryBinding.requestContexts(0, 1).then((aContexts) => {
                 var iLengthMsec = 0;
                 
@@ -747,13 +753,14 @@ sap.ui.define([
                 });
             }).then(() => {
                 MessageToast.show("Status updated successfully");
-                this.onCloseStatusDialog();
+                that.onCloseStatusDialog(); 
                 setTimeout(() => {
-                    this._loadEquipments();
+                    that._loadEquipments();
                 }, 500);
             }).catch((oError) => {
                 console.error("Error updating status:", oError);
                 MessageToast.show("Error updating status: " + (oError.message || "Unknown error"));
+                that.onCloseStatusDialog();
             });
         },
 
