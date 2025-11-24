@@ -11,7 +11,8 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             Status, 
             EquipmentHierarchies, 
             EquipmentStatus, 
-            StatusHistory 
+            StatusHistory,
+            EquipmentCardOrder
         } = this.entities;
 
         const managedEntities = [
@@ -20,7 +21,8 @@ module.exports = class EquipmentService extends cds.ApplicationService {
             Status, 
             EquipmentHierarchies, 
             EquipmentStatus, 
-            StatusHistory
+            StatusHistory,
+            EquipmentCardOrder
         ];
 
         this.before(['CREATE', 'UPDATE'], managedEntities, (req) => {

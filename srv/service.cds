@@ -11,6 +11,7 @@ service EquipmentService {
     entity EquipmentHierarchies as projection on d4iot.EquipmentHierarchies;
     entity EquipmentStatus as projection on d4iot.EquipmentStatus;
     entity StatusHistory as projection on d4iot.StatusHistory;
+    entity EquipmentCardOrder as projection on d4iot.EquipmentCardOrder;
 
     action activateEquipment(EQUIPMENT: String(18)) returns String;
     action deactivateEquipment(EQUIPMENT: String(18)) returns String;

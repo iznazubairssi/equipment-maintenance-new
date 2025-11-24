@@ -213,7 +213,7 @@ sap.ui.define([
         },
 
         _processEquipmentData: function(aEquipments, sSelectedGroup) {
-            this._enrichEquipmentData(aEquipments);
+            this._enrichEquipmentData(aEquipments, sSelectedGroup);
         },
 
         _filterEquipmentsByGroup: function(aAllEquipments, sGroupId) {
@@ -273,14 +273,14 @@ sap.ui.define([
                 
                 var aCombinedEquipments = [...aSubGroupCards, ...aMAChildren];
                 
-                this._enrichEquipmentData(aCombinedEquipments);
+                this._enrichEquipmentData(aCombinedEquipments, sGroupId);
             }).catch((oError) => {
                 console.error("Error loading hierarchies:", oError);
-                this._enrichEquipmentData([]);
+                this._enrichEquipmentData([], sGroupId);
             });
         },
 
-        _enrichEquipmentData: function(aEquipments) {
+        _enrichEquipmentData: function(aEquipments, sGroupId) {
             var oModel = this.getView().getModel();
             var oViewModel = this.getView().getModel("viewModel");
 
@@ -290,9 +290,12 @@ sap.ui.define([
             var aActualEquipments = aEquipments.filter(eq => !eq.IsSubGroup);
 
             if (aActualEquipments.length === 0) {
-                var oEquipmentModel = new JSONModel({ Equipments: aSubGroups });
-                this.getView().setModel(oEquipmentModel, "shopfloor");
-                oViewModel.setProperty("/isLoading", false);
+                this._loadCardOrder(sGroupId).then((aCardOrders) => {
+                    var aOrderedSubGroups = this._applySavedOrder(aSubGroups, aCardOrders);
+                    var oEquipmentModel = new JSONModel({ Equipments: aOrderedSubGroups });
+                    this.getView().setModel(oEquipmentModel, "shopfloor");
+                    oViewModel.setProperty("/isLoading", false);
+                });
                 return;
             }
 
@@ -380,18 +383,23 @@ sap.ui.define([
                         StatusStructure: eq.STATUSSTRUCTURE || "",
                         AlarmStructure: eq.ALARMSTRUCTURE || "",
                         PDataStructure: eq.PDATASTRUCTURE || "",
+                        StatusTypeDesc: oStatus.statusTypeDesc,
                         IsSubGroup: false
                     };
                 });
 
                 var aFinalEquipments = [...aSubGroups, ...aEnrichedEquipments];
 
-                var oEquipmentModel = new JSONModel({ Equipments: aFinalEquipments });
-                this.getView().setModel(oEquipmentModel, "shopfloor");
-                
-                oViewModel.setProperty("/isLoading", false);
-                oViewModel.setProperty("/lastRefresh", new Date());
-                console.log("Equipment model set. Button clicks will now work.");
+                this._loadCardOrder(sGroupId).then((aCardOrders) => {
+                    var aOrderedEquipments = this._applySavedOrder(aFinalEquipments, aCardOrders);
+                    
+                    var oEquipmentModel = new JSONModel({ Equipments: aOrderedEquipments });
+                    this.getView().setModel(oEquipmentModel, "shopfloor");
+                    
+                    oViewModel.setProperty("/isLoading", false);
+                    oViewModel.setProperty("/lastRefresh", new Date());
+                    console.log("Equipment model set. Button clicks will now work.");
+                });
                 
             }).catch((oError) => {
                 console.error("Error loading equipment status:", oError);
@@ -413,82 +421,189 @@ sap.ui.define([
 
                 var aFinalEqui = [...aSubGroups, ...aBasicEquipments];
 
-                var oEquipmentModel = new JSONModel({ Equipments: aFinalEqui });
-                this.getView().setModel(oEquipmentModel, "shopfloor");
-                
-                oViewModel.setProperty("/isLoading", false);
+                this._loadCardOrder(sGroupId).then((aCardOrders) => {
+                    var aOrderedEquipments = this._applySavedOrder(aFinalEqui, aCardOrders);
+                    
+                    var oEquipmentModel = new JSONModel({ Equipments: aOrderedEquipments });
+                    this.getView().setModel(oEquipmentModel, "shopfloor");
+                    
+                    oViewModel.setProperty("/isLoading", false);
+                });
             });
+        },
+
+        _loadCardOrder: function(sGroupId) {
+            var oModel = this.getView().getModel();
+            var sUserId = this._getUserId();
+            
+            return new Promise((resolve) => {
+                if (!oModel) {
+                    resolve([]);
+                    return;
+                }
+
+                var oOrderBinding = oModel.bindList("/EquipmentCardOrder", undefined, undefined, [
+                    new Filter("USER_ID", FilterOperator.EQ, sUserId),
+                    new Filter("GROUP_ID", FilterOperator.EQ, sGroupId)
+                ]);
+
+                oOrderBinding.requestContexts().then((aContexts) => {
+                    var aOrders = aContexts.map(ctx => ctx.getObject());
+                    resolve(aOrders);
+                }).catch((oError) => {
+                    console.error("Error loading card order:", oError);
+                    resolve([]);
+                });
+            });
+        },
+
+        _applySavedOrder: function(aEquipments, aCardOrders) {
+            if (!aCardOrders || aCardOrders.length === 0) {
+                return aEquipments;
+            }
+
+            var mOrderMap = {};
+            aCardOrders.forEach(order => {
+                mOrderMap[order.EQUIPMENT_ID] = order.ORDER_INDEX;
+            });
+
+            aEquipments.sort((a, b) => {
+                var orderA = mOrderMap[a.EquipmentID];
+                var orderB = mOrderMap[b.EquipmentID];
+
+                if (orderA !== undefined && orderB !== undefined) {
+                    return orderA - orderB;
+                } else if (orderA !== undefined) {
+                    return -1;
+                } else if (orderB !== undefined) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+
+            return aEquipments;
+        },
+
+        _getUserId: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "DEFAULT_USER";
+        },
+
+        _saveCardOrder: function(aEquipments, sGroupId) {
+            var oModel = this.getView().getModel();
+            var sUserId = this._getUserId();
+
+            if (!oModel) {
+                console.error("Model not available for saving card order");
+                return Promise.resolve();
+            }
+
+            var oDeleteBinding = oModel.bindList("/EquipmentCardOrder");
+            var aFilters = [
+                new Filter("USER_ID", FilterOperator.EQ, sUserId),
+                new Filter("GROUP_ID", FilterOperator.EQ, sGroupId)
+            ];
+            oDeleteBinding.filter(aFilters);
+
+            return oDeleteBinding.requestContexts().then((aContexts) => {
+                var aDeletePromises = aContexts.map(ctx => ctx.delete());
+                return Promise.all(aDeletePromises);
+            }).then(() => {
+                var oOrderBinding = oModel.bindList("/EquipmentCardOrder");
+                var aCreatePromises = [];
+
+                aEquipments.forEach((oEquip, index) => {
+                    var oOrderEntry = {
+                        USER_ID: sUserId,
+                        GROUP_ID: sGroupId,
+                        EQUIPMENT_ID: oEquip.EquipmentID,
+                        ORDER_INDEX: index
+                    };
+                    var oContext = oOrderBinding.create(oOrderEntry);
+                    aCreatePromises.push(oContext.created());
+                });
+
+                return Promise.all(aCreatePromises);
+            }).then(() => {
+                return oModel.submitBatch("$auto");
+            }).then(() => {
+                console.log("Card order saved successfully");
+            }).catch((oError) => {
+                console.error("Error saving card order:", oError);
+            });
+        },
+
+        onCardDragStart: function(oEvent) {
+            var oDraggedControl = oEvent.getParameter("target");
+            var oDragSession = oEvent.getParameter("dragSession");
+            
+            oDragSession.setComplexData("customDragData", {
+                draggedControl: oDraggedControl
+            });
+            
+            console.log("Drag started for card");
+        },
+
+        onCardDrop: function(oEvent) {
+            var oDraggedControl = oEvent.getParameter("draggedControl");
+            var oDroppedControl = oEvent.getParameter("droppedControl");
+            var sDropPosition = oEvent.getParameter("dropPosition");
+
+            if (!oDraggedControl || !oDroppedControl) {
+                return;
+            }
+
+            var oShopfloorModel = this.getView().getModel("shopfloor");
+            var aEquipments = oShopfloorModel.getProperty("/Equipments");
+
+            var sDraggedId = oDraggedControl.data("equipmentId");
+            var sDroppedId = oDroppedControl.data("equipmentId");
+
+            if (!sDraggedId || !sDroppedId) {
+                return;
+            }
+
+            var iDraggedIndex = aEquipments.findIndex(eq => eq.EquipmentID === sDraggedId);
+            var iDroppedIndex = aEquipments.findIndex(eq => eq.EquipmentID === sDroppedId);
+
+            if (iDraggedIndex === -1 || iDroppedIndex === -1) {
+                return;
+            }
+
+            var oDraggedItem = aEquipments[iDraggedIndex];
+            aEquipments.splice(iDraggedIndex, 1);
+
+            var iNewIndex = iDroppedIndex;
+            if (iDraggedIndex < iDroppedIndex) {
+                iNewIndex--;
+            }
+
+            if (sDropPosition === "After") {
+                iNewIndex++;
+            }
+
+            aEquipments.splice(iNewIndex, 0, oDraggedItem);
+
+            oShopfloorModel.setProperty("/Equipments", aEquipments);
+
+            var oViewModel = this.getView().getModel("viewModel");
+            var sCurrentSubGroup = oViewModel.getProperty("/currentSubGroup");
+            var sSelectedGroup = oViewModel.getProperty("/selectedGroup");
+            var sGroupId = sCurrentSubGroup || sSelectedGroup;
+
+            this._saveCardOrder(aEquipments, sGroupId);
+
+            MessageToast.show("Card order updated");
         },
 
         _getStatusClass: function(sStatusType) {
-            var mStatusClassMap = {
-                "PROD": "sc-type-prod",
-                "PROD2": "sc-type-prod",
-                "IDLE": "sc-type-idle",
-                "DOWN": "sc-type-down",
-                "MAINT": "sc-type-maint",
-                "ENG": "sc-type-eng",
-                "SETUP": "sc-type-setup"
-            };
-            
-            return mStatusClassMap[sStatusType] || "sc-type-idle";
-        },
-
-        _navigateToSubGroup: function(oSubGroup) {
-            var oViewModel = this.getView().getModel("viewModel");
-            var sParentGroup = oViewModel.getProperty("/selectedGroup");
-            
-            var sParentGroupName = this._getGroupName(sParentGroup);
-            
-            oViewModel.setProperty("/currentSubGroup", oSubGroup.EquipmentID);
-            oViewModel.setProperty("/currentSubGroupName", oSubGroup.EquipmentName);
-            oViewModel.setProperty("/parentGroupName", sParentGroupName);
-            
-            MessageToast.show("Opening sub-group: " + oSubGroup.EquipmentName);
-            this._loadEquipments();
-        },
-
-        _getGroupName: function(sGroupId) {
-            if (sGroupId === "ALL") return "ALL EQUIPMENT";
-            
-            var oGroupModel = this.getView().getModel("groups");
-            var aGroups = oGroupModel.getProperty("/Groups");
-            var oGroup = aGroups.find(g => g.key === sGroupId);
-            
-            return oGroup ? oGroup.text : sGroupId;
-        },
-
-        onGroupSelect: function(oEvent) {
-            var sKey = oEvent.getParameter("key");
-            var oViewModel = this.getView().getModel("viewModel");
-            
-            oViewModel.setProperty("/selectedGroup", sKey);
-            oViewModel.setProperty("/currentSubGroup", null);
-            oViewModel.setProperty("/currentSubGroupName", null);
-            oViewModel.setProperty("/parentGroupName", this._getGroupName(sKey));
-            oViewModel.setProperty("/breadcrumb", []);
-            
-            MessageToast.show("Loading group: " + sKey);
-            this._loadEquipments();
-        },
-
-        onBreadcrumbPress: function(oEvent) {
-            var oViewModel = this.getView().getModel("viewModel");
-            
-            oViewModel.setProperty("/currentSubGroup", null);
-            oViewModel.setProperty("/currentSubGroupName", null);
-            oViewModel.setProperty("/breadcrumb", []);
-            
-            this._loadEquipments();
-        },
-
-        formatDate: function(oDate) {
-            if (!oDate) return "";
-            var oFormat = DateFormat.getDateTimeInstance({ 
-                style: "medium",
-                pattern: "dd.MM.yyyy HH:mm:ss"
-            });
-            return oFormat.format(oDate);
+            switch (sStatusType) {
+                case "PROD": return "sc-type-production";
+                case "IDLE": return "sc-type-idle";
+                case "DOWN": return "sc-type-down";
+                case "SETUP": return "sc-type-subgroup";
+                default: return "sc-type-idle";
+            }
         },
 
         onPressRefresh: function() {
@@ -496,27 +611,61 @@ sap.ui.define([
             this._loadEquipments();
         },
 
-        onPressOptions: function() {
-            var oOptionsDialog = this.byId("optionsDialog");
-            if (oOptionsDialog) {
-                oOptionsDialog.open();
+        onGroupSelect: function(oEvent) {
+            var oViewModel = this.getView().getModel("viewModel");
+            var sSelectedKey = oEvent.getParameter("key");
+            
+            oViewModel.setProperty("/selectedGroup", sSelectedKey);
+            oViewModel.setProperty("/currentSubGroup", null);
+            oViewModel.setProperty("/currentSubGroupName", null);
+            
+            this._loadEquipments();
+        },
+
+        onPressOpenCard: function(oEvent) {
+            var oBindingContext = oEvent.getSource().getBindingContext("shopfloor");
+            if (!oBindingContext) {
+                return;
+            }
+
+            var oEquipment = oBindingContext.getObject();
+
+            if (oEquipment.IsSubGroup) {
+                var oViewModel = this.getView().getModel("viewModel");
+                var sCurrentGroup = oViewModel.getProperty("/selectedGroup");
+                
+                var oGroupsModel = this.getView().getModel("groups");
+                var aGroups = oGroupsModel.getProperty("/Groups");
+                var oSelectedGroup = aGroups.find(g => g.key === sCurrentGroup);
+                
+                oViewModel.setProperty("/currentSubGroup", oEquipment.EquipmentID);
+                oViewModel.setProperty("/currentSubGroupName", oEquipment.EquipmentName);
+                oViewModel.setProperty("/parentGroupName", oSelectedGroup ? oSelectedGroup.text : "ALL EQUIPMENT");
+                
+                this._loadEquipments();
+            } else {
+                this._openStatusDialog(oEquipment);
             }
         },
 
-        onAutoRefreshToggle: function(oEvent) {
-            var bSelected = oEvent.getParameter("selected");
-            console.log("Auto-refresh toggled:", bSelected);
+        onBreadcrumbPress: function() {
+            var oViewModel = this.getView().getModel("viewModel");
+            oViewModel.setProperty("/currentSubGroup", null);
+            oViewModel.setProperty("/currentSubGroupName", null);
+            this._loadEquipments();
         },
 
-        onRefreshIntervalChange: function(oEvent) {
-            var iValue = oEvent.getParameter("value");
-            console.log("Refresh interval changed to:", iValue);
+        onPressFilter: function() {
+            MessageToast.show("Filter feature coming soon");
         },
 
-        onSaveOptions: function() {
-            this._setupAutoRefresh();
-            MessageToast.show("Options saved successfully");
-            this.onCloseOptionsDialog();
+        onPressDocumentation: function() {
+            MessageToast.show("Documentation feature coming soon");
+        },
+
+        onPressOptions: function() {
+            var oDialog = this.byId("optionsDialog");
+            oDialog.open();
         },
 
         onCloseOptionsDialog: function() {
@@ -524,70 +673,41 @@ sap.ui.define([
             oDialog.close();
         },
 
-        onPressFilter: function() {
-            MessageToast.show("Filter equipment groups - coming soon");
+        onSaveOptions: function() {
+            this._setupAutoRefresh();
+            MessageToast.show("Options saved");
+            this.onCloseOptionsDialog();
         },
 
-        onPressDocumentation: function() {
-            MessageBox.information(
-                "Shopfloor View Documentation\n\n" +
-                "This view displays equipment grouped by machine groups.\n\n" +
-                "Features:\n" +
-                "- Group tabs to filter equipment\n" +
-                "- Nested sub-groups with special cards\n" +
-                "- Color-coded status indicators\n" +
-                "- Click equipment cards to change status\n" +
-                "- Click sub-group cards to view contents\n" +
-                "- Auto-refresh capability\n\n" +
-                "Status Colors:\n" +
-                "Green: Productive\n" +
-                "Yellow: Idle\n" +
-                "Red: Down/Problem\n" +
-                "Blue: Engineering/Setup\n" +
-                "Dark Red: Maintenance\n" +
-                "Gray: Sub-Group",
-                { title: "Documentation" }
-            );
+        onAutoRefreshToggle: function() {
+            this._setupAutoRefresh();
         },
 
-        onPressOpenCard: function(oEvent) {
-            oEvent.cancelBubble = true;
-            if (oEvent.stopPropagation) {
-                oEvent.stopPropagation();
+        onRefreshIntervalChange: function() {
+            var oOptionsModel = this.getView().getModel("optionsModel");
+            var bEnabled = oOptionsModel.getProperty("/autoRefreshEnabled");
+            if (bEnabled) {
+                this._setupAutoRefresh();
             }
+        },
 
-            var oBindingContext = oEvent.getSource().getBindingContext("shopfloor");
-            if (!oBindingContext) {
-                console.error("onPressOpenCard: No binding context found");
-                return;
-            }
-
-            var oEquipment = oBindingContext.getObject();
-            if (!oEquipment) {
-                console.error("onPressOpenCard: Could not get equipment object");
-                return;
-            }
-
-            if (oEquipment.IsSubGroup) {
-                console.log("Opening subgroup:", oEquipment.EquipmentID);
-                this._navigateToSubGroup(oEquipment);
-            } else {
-                console.log("Opening status dialog for:", oEquipment.EquipmentID);
-                this._openStatusDialog(oEquipment);
-            }
+        formatDate: function(sDate) {
+            if (!sDate) return "";
+            var oDate = new Date(sDate);
+            var oDateFormat = DateFormat.getDateTimeInstance({
+                pattern: "dd.MM.yyyy HH:mm:ss"
+            });
+            return oDateFormat.format(oDate);
         },
 
         onPressCardAction: function(oEvent) {
-            oEvent.cancelBubble = true;
-            if (oEvent.stopPropagation) {
-                oEvent.stopPropagation();
-            }
+            var oButton = oEvent.getSource();
+            var sAction = oButton.data("actionType");
             
-            var sAction = oEvent.getSource().data("actionType");
-            var oBindingContext = oEvent.getSource().getBindingContext("shopfloor");
+            var oItem = oButton.getParent().getParent().getParent();
+            var oBindingContext = oItem.getBindingContext("shopfloor");
             
             if (!oBindingContext) {
-                console.error("No binding context found");
                 return;
             }
             

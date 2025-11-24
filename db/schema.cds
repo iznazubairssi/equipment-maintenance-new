@@ -96,3 +96,14 @@ entity StatusHistory : managed {
     LASTSTATUS     : String(4);
     LENGTHMSEC     : Integer64;
 }
+
+/**
+ * 
+ * Equipment Card Ordering - stores user preferences for card positions
+ */
+entity EquipmentCardOrder : managed {
+    key USER_ID       : String(255);
+    key GROUP_ID      : String(50);
+    key EQUIPMENT_ID  : String(18);
+    ORDER_INDEX   : Integer;
+}

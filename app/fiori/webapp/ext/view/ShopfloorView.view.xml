@@ -5,6 +5,7 @@
     xmlns:f="sap.f"
     xmlns:l="sap.ui.layout"
     xmlns:core="sap.ui.core"
+    xmlns:dnd="sap.ui.core.dnd"
     controllerName="equipment.app.fiori.ext.controller.ShopfloorView"
     displayBlock="true"
     height="100%">
@@ -95,12 +96,26 @@
                         columnSize="400px" 
                         gap="0.5rem" />
                 </f:layout>
+                <f:layoutData>
+                    <f:GridContainerItemLayoutData id="gridContainerLayout" minRows="2" columns="2"/>
+                </f:layoutData>
+                <f:dragDropConfig>
+                    <dnd:DragDropInfo
+                        id="dragDropInfo1"
+                        sourceAggregation="items"
+                        targetAggregation="items"
+                        dropPosition="Between"
+                        drop=".onCardDrop"/>
+                </f:dragDropConfig>
                 <f:items>
 
                     <CustomListItem 
                         id="equipmentCard"
                         type="Active"
                         press=".onPressOpenCard">
+                        <customData>
+                            <core:CustomData key="equipmentId" value="{shopfloor>EquipmentID}"/>
+                        </customData>
                         <VBox id="cardWrapper" class="sc-card-wrapper {= ${shopfloor>IsSubGroup} ? 'sc-subgroup-card' : ''}">
                             <HBox id="cardContainer" class="sc-container">
                                 
@@ -185,6 +200,17 @@
 
                             </HBox>
                         </VBox>
+                        <dragDropConfig>
+                            <dnd:DragInfo
+                                id="dragDropInfo2"
+                                sourceAggregation="content"
+                                dragStart=".onCardDragStart"/>
+                            <dnd:DropInfo
+                                id="dragDropInfo3"
+                                targetAggregation="content"
+                                dropPosition="Between"
+                                drop=".onCardDrop"/>
+                        </dragDropConfig>
                     </CustomListItem>
 
                 </f:items>
